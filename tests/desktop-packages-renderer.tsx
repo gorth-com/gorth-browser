@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@gorth-io/primitive/cores/tanstack/query";
 import {
   RouterProvider,
   useRouter,
   useRouterState,
-} from "@tanstack/react-router";
-import type { ColumnDef } from "@tanstack/react-table";
+} from "@gorth-io/primitive/cores/tanstack/router";
+import type { ColumnDef } from "@gorth-io/primitive/cores/tanstack/table";
 import { createInternalRouter } from "@/lib/browser/router";
 import { DataTable, dataTableFeatures } from "@/components/custom/data-table";
 import { Ranger } from "@/components/custom/ranger";
-import { Button } from "@/components/ui/button";
+import { Button } from "@gorth-io/primitive/custom/button";
 import { QueryProvider } from "@/providers/query";
 import { useTRPC } from "@/lib/rpc/client";
 

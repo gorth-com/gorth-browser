@@ -1,89 +1,150 @@
-import { BookOpen, Settings } from "lucide-react";
-import { AppSidebar } from "@/components/dashboard/app-sidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { useBrowserSetup } from "@/hooks/use-browser-setup";
+import { Fragment } from "react";
+import { HeadingIcon } from "@/components/heading";
+import { settingsPagesFirst, settingsPagesSecond } from "@/utils/constant";
 import {
-  bookmarkNavigation,
-  type BrowserBookmark,
-  type BrowserSidebarSide,
-} from "@/components/dashboard/bookmarks";
+  Settings,
+  LogIn,
+  KeySquare,
+  UserRound,
+  Globe2,
+  Rocket,
+  Star,
+  User,
+} from "@gorth-io/primitive/cores/lucide";
 import {
-  settingsPagesFirst,
-  settingsPagesSecond,
-  settingsPages,
-} from "@/lib/browser/settings-pages";
-import type { BrowserInternalPage } from "@/lib/browser/internal-pages";
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarSeparator,
+} from "@gorth-io/primitive/custom/sidebar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/providers/tooltip";
+import { NavUser } from "@/components/dashboard/nav-user";
+import { useAuth } from "@/hooks/use-auth";
 
+import type { BrowserInternalPage } from "@/lib/browser/internal-pages";
 interface SettingsDashboardProps {
+  collapsible?: boolean;
+  collapseMode?: "icon" | "none";
   variant: "settings";
   page: BrowserInternalPage;
   onOpenInternal: (page: Exclude<BrowserInternalPage, "new-tab">) => void;
 }
-interface BookmarksDashboardProps {
-  variant: "bookmarks";
-  bookmarks: BrowserBookmark[];
-  side: BrowserSidebarSide;
-  onClose: () => void;
-  onNavigate: (url: string) => void;
-}
-export function Dashboard(
-  props: SettingsDashboardProps | BookmarksDashboardProps,
-) {
-  if (props.variant === "settings") {
-    return (
-      <AppSidebar
-        collapsible="none"
-        pathname={props.page}
-        onNavigate={(url) => {
-          const page = settingsPages.find((item) => item.id === url);
-          if (page) props.onOpenInternal(page.id);
-        }}
-        data={{
-          brand: {
-            name: "Settings",
-            icon: Settings,
-            url: "settings/get-started",
-          },
-          navMain: settingsPagesFirst.map((item) => ({
-            title: item.title,
-            url: item.id,
-            icon: item.icon,
-          })),
-          navSecondary: settingsPagesSecond.map((item) => ({
-            title: item.title,
-            url: item.id,
-            icon: item.icon,
-          })),
-        }}
-      />
+export function Dashboard(props: SettingsDashboardProps) {
+  const auth = useAuth();
+  const account = auth.account;
+  const profile = useBrowserSetup().data;
+  const profileName = profile?.profileName ?? "Personal";
+  const localIcon = { globe: Globe2, user: User, rocket: Rocket, star: Star }[
+    profile?.profileIcon ?? "user"
+  ];
+  const navigate = (url: string) => {
+    const item = [...settingsPagesFirst, ...settingsPagesSecond].find(
+      (item) => item.id === url,
     );
-  }
+    if (item) props.onOpenInternal(item.id);
+  };
   return (
-    <SidebarProvider
-      open
-      onOpenChange={() => {}}
-      className={`relative z-40 min-h-0 w-64 shrink-0 ${props.side === "right" ? "border-l" : "border-r"}`}
+    <Sidebar
+      collapsible={
+        props.collapsible
+          ? props.collapseMode === "none"
+            ? "offcanvas"
+            : "icon"
+          : "none"
+      }
+      className={props.collapsible ? "absolute! inset-y-0 h-full" : "border-r"}
     >
-      <AppSidebar
-        collapsible="none"
-        className="min-h-0"
-        pathname=""
-        onNavigate={props.onNavigate}
-        onClose={props.onClose}
-        empty={
-          <p className="px-4 py-6 text-center text-xs leading-5 text-muted-foreground">
-            No bookmarks yet. Select the bookmark button beside the address bar
-            to add one.
-          </p>
-        }
-        data={{
-          brand: {
-            name: "Bookmarks",
-            icon: BookOpen,
-            url: "gorth://bookmarks",
-          },
-          navMain: bookmarkNavigation(props.bookmarks),
-        }}
-      />
-    </SidebarProvider>
+      <SidebarHeader className="group-data-[collapsible=icon]:items-center">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              className="h-14 group-data-[collapsible=icon]:p-0!"
+              onClick={() => props.onOpenInternal("settings/get-started")}
+            >
+              <HeadingIcon icon={Settings} />
+              <span className="truncate text-2xl font-bold tracking-tight group-data-[collapsible=icon]:hidden">
+                Settings
+              </span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarSeparator className="mx-0" />
+      <SidebarContent>
+        {[
+          settingsPagesFirst,
+          settingsPagesSecond.filter((item) => item.id !== "settings/help"),
+          settingsPagesSecond.filter((item) => item.id === "settings/help"),
+        ].map((items, index) => (
+          <Fragment key={index}>
+            {index > 0 && <SidebarSeparator className="mx-0 -my-2" />}
+            <SidebarGroup className="group-data-[collapsible=icon]:items-center">
+              <SidebarMenu>
+                {items.map((item) => (
+                  <SidebarMenuItem key={item.id}>
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={
+                          <SidebarMenuButton
+                            aria-label={item.title}
+                            aria-current={
+                              props.page === item.id ? "page" : undefined
+                            }
+                            isActive={props.page === item.id}
+                            className="group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:justify-center"
+                            onClick={() => props.onOpenInternal(item.id)}
+                          >
+                            <item.icon />
+                            <span className="group-data-[collapsible=icon]:hidden">
+                              {item.title}
+                            </span>
+                          </SidebarMenuButton>
+                        }
+                      />
+                      <TooltipContent side="right">{item.title}</TooltipContent>
+                    </Tooltip>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroup>
+          </Fragment>
+        ))}
+      </SidebarContent>
+      <SidebarSeparator className="mx-0" />
+      <SidebarFooter className="group-data-[collapsible=icon]:items-center">
+        <NavUser
+          localIcon={localIcon}
+          auth={auth}
+          onNavigate={navigate}
+          user={{
+            name: auth.authenticated
+              ? (account?.name ?? "Personal")
+              : profileName,
+            email: auth.authenticated ? "authenticated" : "local",
+            avatar: auth.authenticated ? account?.image : undefined,
+          }}
+          nav={{
+            main: [
+              {
+                title: "Tài khoản",
+                url: "settings/get-started",
+                icon: UserRound,
+              },
+            ],
+            secondary: [
+              { title: "Sign in", url: "/sign-in", icon: LogIn },
+              { title: "Create account", url: "/sign-up", icon: KeySquare },
+            ],
+          }}
+        />
+      </SidebarFooter>
+    </Sidebar>
   );
 }

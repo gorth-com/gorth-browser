@@ -1,17 +1,22 @@
+import { ErrorFeedback } from "@/components/element/error-feedback";
+import { groupModes } from "@/utils/constant";
 import { useState } from "react";
-import { useForm } from "@tanstack/react-form";
+import { useForm } from "@gorth-io/primitive/cores/tanstack/form";
 import {
   Check,
-  Eye,
   Folder,
   Pencil,
   Plus,
-  Columns2,
   Trash2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+} from "@gorth-io/primitive/cores/lucide";
+import { Button } from "@gorth-io/primitive/custom/button";
+import { Input } from "@gorth-io/primitive/default/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@gorth-io/primitive/default/card";
 import { TabIcon } from "@/components/element/tab-icon";
 import type { BrowserTabItem } from "@/components/element/browser-tabs";
 import type {
@@ -26,12 +31,6 @@ export interface TabGroupsProps {
   onDeleteGroup: (id: string) => Promise<void>;
   onOpenGroup: (id: string) => void;
 }
-
-const groupModes = [
-  { mode: "normal", label: "Normal", icon: Folder },
-  { mode: "split", label: "Split", icon: Columns2 },
-  { mode: "glance", label: "Glance", icon: Eye },
-] as const;
 
 export function TabGroups({
   groups,
@@ -123,11 +122,7 @@ export function TabGroups({
           New group
         </Button>
       </div>
-      {error && (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      )}
+      {error && <ErrorFeedback message={error} />}
       {isEditing && (
         <Card>
           <CardHeader>

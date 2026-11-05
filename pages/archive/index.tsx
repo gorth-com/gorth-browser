@@ -1,7 +1,8 @@
+import { ErrorFeedback } from "@/components/element/error-feedback";
 import { useEffect, useState } from "react";
-import { Archive, RotateCcw, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Archive, RotateCcw, Trash2 } from "@gorth-io/primitive/cores/lucide";
+import { Button } from "@gorth-io/primitive/custom/button";
+import { Card, CardContent } from "@gorth-io/primitive/default/card";
 import { PageShell, EmptyState } from "@/pages/shared";
 import type { ArchiveEntry } from "@/lib/browser/lifecycle";
 import type { PersistedTab } from "@/lib/browser/persistence";
@@ -33,16 +34,8 @@ export function ArchivePage({
     }
   };
   return (
-    <PageShell
-      icon={Archive}
-      title="Archived tabs"
-      description="Restore inactive tabs saved in your browser database."
-    >
-      {error && (
-        <p role="alert" className="mb-4 text-destructive">
-          {error}
-        </p>
-      )}
+    <PageShell icon={Archive} title="Archived tabs">
+      {error && <ErrorFeedback message={error} />}
       {!entries.length ? (
         <EmptyState icon={Archive} title="No archived tabs">
           Archive an inactive tab from its menu, or enable automatic archiving

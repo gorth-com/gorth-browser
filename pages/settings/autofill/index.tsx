@@ -1,18 +1,14 @@
-import { ListChecks } from "lucide-react";
+import { ListChecks } from "@gorth-io/primitive/cores/lucide";
 import { PageShell } from "@/pages/shared";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
+} from "@gorth-io/primitive/default/card";
 export function SettingsSectionPage() {
   return (
-    <PageShell
-      icon={ListChecks}
-      title="Autofill and passwords"
-      description="Manage saved form information and passwords."
-    >
+    <PageShell icon={ListChecks} title="Autofill and passwords">
       <Card>
         <CardHeader>
           <CardTitle>Autofill and passwords</CardTitle>

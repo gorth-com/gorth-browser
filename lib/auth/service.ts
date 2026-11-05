@@ -1,62 +1,34 @@
+import { getRpcRendererUrl, isRpcRendererUrl } from "@/main/rpc/sender";
 import { upsertUserProfile } from "@/services/user-profile";
 import { BrowserWindow, ipcMain } from "electron";
 import {
   openAuthView,
   closeAuthView,
-  clearAuthBrowserSession,
   registerAuthViewIpc,
 } from "@/main/services/auth-view";
-import { readVault, writeVault, vaultExists } from "./vault";
 import {
-  ssoIssuer,
-  ssoOAuthClientId,
-  ssoRedirectUri,
-} from "@/lib/utils/environment";
-import { gorthBinding, loginGorth, refreshGorth, revokeGorth } from "./gorth";
-import type { AuthResult, AuthSession, AuthSnapshot } from "./types";
+  gorthSnapshot,
+  getGorthUserId,
+  loginGorth,
+  restoreGorthSession,
+  signOutGorth,
+  onGorthChanged,
+} from "@/lib/auth/gorth";
+import type { AuthResult, AuthSnapshot } from "@/lib/auth/types";
+import { getLoginBrowser, setLoginBrowser } from "@/lib/auth/login-browser";
 
-let session: AuthSession | null = null;
-let unlocked = false;
 let operation: AbortController | null = null;
 function snapshot(): AuthSnapshot {
   return {
-    user: session
-      ? {
-          id: session.id,
-          name: session.name,
-          email: session.email,
-          username: session.username,
-          image: session.image,
-          emailVerified: session.emailVerified,
-          expiresAt: session.tokens.expiresAt,
-          canRefresh:
-            !!session.tokens.refreshToken &&
-            session.tokens.binding === gorthBinding(),
-          needsLogin:
-            session.tokens.expiresAt <= Date.now() ||
-            session.tokens.binding !== gorthBinding(),
-        }
-      : null,
-    locked: !unlocked && vaultExists(),
-    configured: !!(ssoIssuer && ssoOAuthClientId && ssoRedirectUri),
+    ...gorthSnapshot(),
     busy: !!operation,
+    loginBrowser: getLoginBrowser(),
   };
 }
 function changed() {
   for (const window of BrowserWindow.getAllWindows())
     if (!window.webContents.isDestroyed())
       window.webContents.send("auth:changed", snapshot());
-}
-async function unlock() {
-  if (unlocked) return;
-  session = await readVault();
-  unlocked = true;
-}
-async function save(next: AuthSession | null) {
-  await writeVault(next);
-  session = next;
-  unlocked = true;
-  changed();
 }
 export function cancelAuth() {
   operation?.abort();
@@ -67,12 +39,30 @@ export function registerAuthIpc() {
     if (
       !window ||
       window.webContents !== event.sender ||
-      event.senderFrame !== event.sender.mainFrame
+      event.senderFrame !== event.sender.mainFrame ||
+      !event.senderFrame ||
+      !isRpcRendererUrl(event.senderFrame.url, getRpcRendererUrl())
     )
       throw new Error("Untrusted auth sender");
     return window;
   };
+  onGorthChanged(changed);
   registerAuthViewIpc(trusted);
+  ipcMain.handle("auth:login-browser", (event, value: unknown): AuthResult => {
+    trusted(event);
+    try {
+      if (operation)
+        throw new Error("An account operation is already running.");
+      setLoginBrowser(value);
+      changed();
+      return { snapshot: snapshot() };
+    } catch {
+      return {
+        snapshot: snapshot(),
+        error: "Không thể lưu trình duyệt đăng nhập.",
+      };
+    }
+  });
   ipcMain.handle("auth:snapshot", (event): AuthResult => {
     trusted(event);
     return { snapshot: snapshot() };
@@ -96,68 +86,27 @@ export function registerAuthIpc() {
           error: "An account operation is already running.",
         };
       const controller = new AbortController();
-      let completed = false;
       operation = controller;
+      let completed = false;
       changed();
       try {
-        // A fresh OAuth login replaces the browser session; it must not decrypt
-        // an old (possibly inaccessible) vault before opening the SSO page.
-        if (action !== "login" && action !== "register") await unlock();
-        controller.signal.throwIfAborted();
         if (action === "login" || action === "register") {
-          const next = await loginGorth(
-            (url, receiveCallback) =>
-              openAuthView(owner, url, receiveCallback, controller, action),
-            controller.signal,
-            action,
-          );
-          controller.signal.throwIfAborted();
-          upsertUserProfile(next);
-          await save(next);
+          openAuthView(owner, controller, action);
+          await loginGorth(controller.signal);
           completed = true;
-        }
-        if (action === "logout") {
-          const previous = session;
-          await save(null);
-          await clearAuthBrowserSession();
-          if (previous) await revokeGorth(previous.tokens, controller.signal);
-        }
-        if (
-          (action === "refresh" ||
-            (action === "unlock" &&
-              session?.tokens.refreshToken &&
-              session.tokens.binding === gorthBinding() &&
-              session.tokens.expiresAt <= Date.now() + 30_000)) &&
-          session
-        ) {
-          const next = await refreshGorth(session, controller.signal);
-          controller.signal.throwIfAborted();
-          upsertUserProfile(next);
-          await save(next);
-        }
+        } else if (action === "logout") await signOutGorth();
+        else await restoreGorthSession(controller.signal);
+        const user = gorthSnapshot().user;
+        if (user) upsertUserProfile(user);
         return { snapshot: { ...snapshot(), busy: false } };
       } catch (error) {
-        if (
-          unlocked &&
-          (action === "refresh" ||
-            (action === "unlock" &&
-              session &&
-              session.tokens.expiresAt <= Date.now() + 30_000))
-        ) {
-          session = null;
-          try {
-            await save(null);
-          } catch {
-            /* Preserve vault if the keychain is unavailable. */
-          }
-        }
         return {
           snapshot: { ...snapshot(), busy: false },
           error: controller.signal.aborted
             ? "Sign-in cancelled."
             : error instanceof Error
               ? error.message
-              : "Sign-in failed.",
+              : "Account operation failed.",
         };
       } finally {
         closeAuthView(owner, completed);
@@ -167,8 +116,6 @@ export function registerAuthIpc() {
     },
   );
 }
-
 export function getAuthenticatedUserId() {
-  const current = snapshot().user;
-  return unlocked && current && !current.needsLogin ? current.id : null;
+  return getGorthUserId();
 }

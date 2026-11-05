@@ -1,19 +1,37 @@
-import { CheckCircle2, PanelLeft, PanelRight, Palette } from "lucide-react";
+import { Separator } from "@gorth-io/primitive/default/separator";
+import { Palette } from "@gorth-io/primitive/cores/lucide";
 import { ThemeToggle } from "@/components/element/theme-toggle";
 import { ToastSettings } from "@/components/element/toast-settings";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { SidebarSettings } from "@/components/element/sidebar-settings";
 import {
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { type SpecialPageProps, PageShell } from "@/pages/shared";
+  CardDescription,
+} from "@gorth-io/primitive/default/card";
+import { Switch } from "@gorth-io/primitive/default/switch";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@gorth-io/primitive/default/radio-group";
+import type { SpecialPageProps } from "@/pages/shared";
+import { Wrapper } from "@/layouts/wrapper";
+import { PageHeading } from "@/components/heading";
+
+const tabLayouts = [
+  { value: "separate", label: "Separate" },
+  { value: "compact", label: "Compact" },
+];
 function SettingsPage({
+  sidebarVisible,
+  onSidebarVisibilityChange,
+  sidebarCollapsible,
+  sidebarCollapseMode,
+  onSidebarCollapsibleChange,
+  onSidebarCollapseModeChange,
+  tabLayout,
+  onTabLayoutChange,
+  enableWorkspace,
+  onEnableWorkspaceChange,
   theme,
   onThemeChange,
   verticalTabs,
@@ -24,6 +42,16 @@ function SettingsPage({
   showTitlebarLogo,
 }: Pick<
   SpecialPageProps,
+  | "sidebarVisible"
+  | "onSidebarVisibilityChange"
+  | "sidebarCollapsible"
+  | "sidebarCollapseMode"
+  | "onSidebarCollapsibleChange"
+  | "onSidebarCollapseModeChange"
+  | "tabLayout"
+  | "onTabLayoutChange"
+  | "enableWorkspace"
+  | "onEnableWorkspaceChange"
   | "onSidebarSideChange"
   | "onShowTitlebarLogoChange"
   | "sidebarSide"
@@ -34,94 +62,161 @@ function SettingsPage({
   | "onThemeChange"
 >) {
   return (
-    <PageShell
-      description="Customize the browser interface."
-      icon={Palette}
-      title="Appearance"
-    >
-      <div className="grid gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Appearance</CardTitle>
-            <CardDescription>
-              Choose the browser interface color mode.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <ToastSettings />
-            <Separator />
+    <Wrapper>
+      <div className="flex flex-col gap-6">
+        <PageHeading icon={Palette} title="Appearance" />
+        <Card className="gap-0 overflow-hidden py-0">
+          <section className="flex flex-col gap-4 p-4">
             <div className="flex items-center justify-between gap-4">
-              <span className="text-sm">Color mode</span>
-              <ThemeToggle theme={theme} onThemeChange={onThemeChange} />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p id="vertical-tabs-label" className="text-sm font-medium">
-                  Vertical tabs
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Move tabs into a collapsible sidebar.
-                </p>
+              <div className="flex flex-col gap-1">
+                <CardTitle id="titlebar-logo-label">Titlebar logo</CardTitle>
+                <CardDescription>
+                  Show the logo beside the tab list.
+                </CardDescription>
               </div>
               <Switch
-                aria-labelledby="vertical-tabs-label"
-                checked={verticalTabs}
-                onCheckedChange={onVerticalTabsChange}
-              />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium">Titlebar logo</p>
-                <p className="text-xs text-muted-foreground">
-                  Show the lightning icon beside the tab list.
-                </p>
-              </div>
-              <Switch
+                aria-labelledby="titlebar-logo-label"
                 checked={showTitlebarLogo}
                 onCheckedChange={onShowTitlebarLogoChange}
               />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Sidebar position</CardTitle>
-            <CardDescription>
-              Place the bookmarks sidebar on the left or right of the window.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-3">
-            <Button
-              onClick={() => onSidebarSideChange("left")}
-              variant={sidebarSide === "left" ? "default" : "outline"}
-            >
-              <PanelLeft /> Left
-            </Button>
-            <Button
-              onClick={() => onSidebarSideChange("right")}
-              variant={sidebarSide === "right" ? "default" : "outline"}
-            >
-              <PanelRight /> Right
-            </Button>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Startup page</CardTitle>
-            <CardDescription>
-              New tabs open the Gorth home page with a centered search box.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Badge variant="secondary">
-              <CheckCircle2 /> Using the New Tab page
-            </Badge>
-          </CardContent>
+          </section>
+          <>
+            <Separator />
+            <section className="flex flex-col gap-4 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-col gap-1">
+                  <CardTitle>Color mode</CardTitle>
+                  <CardDescription>
+                    Choose the browser interface color mode.
+                  </CardDescription>
+                </div>
+                <ThemeToggle theme={theme} onThemeChange={onThemeChange} />
+              </div>
+            </section>
+          </>
+          <>
+            <Separator />
+            <section className="flex flex-col gap-4 p-4">
+              <ToastSettings />
+            </section>
+          </>
+          <>
+            <Separator />
+            <section className="flex flex-col gap-4 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-col gap-1">
+                  <CardTitle>Sidebar position</CardTitle>
+                  <CardDescription>
+                    Place the browser sidebar on either side.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CardTitle id="sidebar-visibility-label">
+                    Show sidebar
+                  </CardTitle>
+                  <Switch
+                    aria-labelledby="sidebar-visibility-label"
+                    checked={sidebarVisible}
+                    onCheckedChange={onSidebarVisibilityChange}
+                  />
+                </div>
+              </div>
+              <RadioGroup
+                aria-label="Sidebar position"
+                value={sidebarSide}
+                className="flex flex-col gap-4"
+                onValueChange={(value) => {
+                  if (value === "left" || value === "right")
+                    onSidebarSideChange(value);
+                }}
+              >
+                <label className="flex items-center gap-3 text-sm">
+                  <RadioGroupItem value="right" />
+                  Show on the right
+                </label>
+                <label className="flex items-center gap-3 text-sm">
+                  <RadioGroupItem value="left" />
+                  Show on the left
+                </label>
+              </RadioGroup>
+            </section>
+          </>
+          <>
+            <Separator />
+            <section className="flex flex-col gap-4 p-4">
+              <SidebarSettings
+                enabled={sidebarCollapsible}
+                mode={sidebarCollapseMode}
+                onEnabledChange={onSidebarCollapsibleChange}
+                onModeChange={onSidebarCollapseModeChange}
+              />
+            </section>
+          </>
+          <>
+            <Separator />
+            <section className="flex flex-col gap-6 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-col gap-1">
+                  <CardTitle>Tab layout</CardTitle>
+                  <CardDescription>Choose the toolbar layout.</CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CardTitle id="vertical-tabs-label">Vertical tabs</CardTitle>
+                  <Switch
+                    aria-labelledby="vertical-tabs-label"
+                    checked={verticalTabs}
+                    onCheckedChange={onVerticalTabsChange}
+                  />
+                </div>
+              </div>
+              <RadioGroup
+                aria-label="Tab layout"
+                value={tabLayout}
+                className="flex flex-col gap-4"
+                onValueChange={(value) => {
+                  if (value === "separate" || value === "compact")
+                    onTabLayoutChange(value);
+                }}
+              >
+                {tabLayouts.map((item) => (
+                  <label
+                    key={item.value}
+                    className="flex items-center gap-3 text-sm"
+                  >
+                    <RadioGroupItem value={item.value} />
+                    {item.label}
+                  </label>
+                ))}
+              </RadioGroup>
+            </section>
+          </>
+
+          <>
+            <Separator />
+            <section className="flex flex-col gap-4 p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col gap-1">
+                  <CardTitle id="enable-workspace-label">
+                    Enable workspace
+                  </CardTitle>
+                  <CardDescription id="enable-workspace-description">
+                    Show the workspace sidebar. Workspace management is not
+                    available yet.
+                  </CardDescription>
+                </div>
+                <Switch
+                  aria-labelledby="enable-workspace-label"
+                  aria-describedby="enable-workspace-description"
+                  checked={enableWorkspace}
+                  onCheckedChange={onEnableWorkspaceChange}
+                />
+              </div>
+            </section>
+          </>
         </Card>
       </div>
-    </PageShell>
+    </Wrapper>
   );
 }
 export { SettingsPage };

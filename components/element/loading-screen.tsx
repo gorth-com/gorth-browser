@@ -1,5 +1,6 @@
-import { Spinner } from "@/components/custom/spinner";
-import { Button } from "@/components/ui/button";
+import { ErrorFeedback } from "@/components/element/error-feedback";
+import { Spinner } from "@gorth-io/primitive/pattern/spinner";
+import { Button } from "@gorth-io/primitive/custom/button";
 
 export function LoadingScreen({ error }: { error?: string }) {
   return (
@@ -7,11 +8,11 @@ export function LoadingScreen({ error }: { error?: string }) {
       aria-label={error ? "Unable to load application" : "Loading"}
       aria-live="polite"
       className="fixed inset-0 z-[9999] flex h-dvh w-screen flex-col items-center justify-center gap-4 overflow-hidden bg-background text-foreground"
-      role={error ? "alert" : "status"}
+      role="status"
     >
       {error ? (
         <>
-          <p className="max-w-md px-6 text-center text-sm">{error}</p>
+          <ErrorFeedback message={error} />
           <Button onClick={() => window.location.reload()}>Try again</Button>
         </>
       ) : (

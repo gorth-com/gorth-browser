@@ -1,18 +1,14 @@
-import { PanelsTopLeft } from "lucide-react";
+import { PanelsTopLeft } from "@gorth-io/primitive/cores/lucide";
 import { PageShell } from "@/pages/shared";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
+} from "@gorth-io/primitive/default/card";
 export function SettingsSectionPage() {
   return (
-    <PageShell
-      icon={PanelsTopLeft}
-      title="Content"
-      description="Manage website content preferences."
-    >
+    <PageShell icon={PanelsTopLeft} title="Content">
       <Card>
         <CardHeader>
           <CardTitle>Content</CardTitle>

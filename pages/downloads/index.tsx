@@ -1,3 +1,5 @@
+import { ErrorFeedback } from "@/components/element/error-feedback";
+import { downloadStateLabels } from "@/utils/constant";
 import { useEffect, useState } from "react";
 import {
   Download,
@@ -10,28 +12,20 @@ import {
   Settings,
   Trash2,
   X,
-} from "lucide-react";
+} from "@gorth-io/primitive/cores/lucide";
 import { PageShell, EmptyState } from "@/pages/shared";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import type { DownloadInfo, DownloadState } from "@/lib/browser/downloads";
+import { Button } from "@gorth-io/primitive/custom/button";
+import { Input } from "@gorth-io/primitive/default/input";
+import { Card, CardContent } from "@gorth-io/primitive/default/card";
+import { Progress } from "@gorth-io/primitive/default/progress";
+import type { DownloadInfo } from "@/lib/browser/downloads";
 import {
   formatDateTime,
   formatDownloadBytes,
   formatRemainingTime,
   formatTransferRate,
-} from "@/lib/utils/formatter";
+} from "@/utils/formatter";
 import type { BrowserInternalPage } from "@/lib/browser/internal-pages";
-
-const stateLabels: Record<DownloadState, string> = {
-  progressing: "Downloading",
-  paused: "Paused",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  interrupted: "Interrupted",
-};
 
 export function DownloadsPage({
   onOpenInternal,
@@ -104,11 +98,7 @@ export function DownloadsPage({
         .includes(query.toLowerCase()),
   );
   return (
-    <PageShell
-      icon={Download}
-      title="Downloads"
-      description="Manage files downloaded from websites."
-    >
+    <PageShell icon={Download} title="Downloads">
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="relative min-w-48 flex-1">
           <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" />
@@ -163,9 +153,7 @@ export function DownloadsPage({
         </p>
       </div>
       {(actionError || loadError) && (
-        <p role="alert" className="mb-4 text-sm text-destructive">
-          {actionError || loadError}
-        </p>
+        <ErrorFeedback message={actionError || loadError} />
       )}
       {loading ? (
         <p role="status" className="text-sm text-muted-foreground">
@@ -214,7 +202,7 @@ export function DownloadsPage({
                         {item.filename}
                       </p>
                       <span className="text-xs text-muted-foreground">
-                        {stateLabels[item.state]}
+                        {downloadStateLabels[item.state]}
                       </span>
                     </div>
                     <p

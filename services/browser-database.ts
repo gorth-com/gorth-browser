@@ -1,25 +1,26 @@
+import { defaultBrowserPreferences } from "@/utils/constant";
 import Database from "better-sqlite3";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import path from "node:path";
-import { userProfilesMigration } from "@/database/migrations/user-profiles";
+import { userProfileMigration } from "@/database/migrations/user-profile";
+import { migrateSingularTables } from "@/database/migrations/singular-table";
 
 import {
-  bookmarks,
+  bookmarkTable,
   history,
-  profiles,
+  profileTable,
   recentlyClosed,
-  settings,
-  tabGroupMembers,
-  tabGroups,
-  tabs,
-  windows,
-  downloads,
-  archivedTabs,
+  settingTable,
+  tabGroupMemberTable,
+  tabGroupTable,
+  tabTable,
+  windowTable,
+  downloadTable,
+  archivedTabTable,
 } from "@/database/schema";
 
 import {
-  defaultBrowserPreferences,
   type BrowserPreferences,
   type BrowserSnapshot,
   type PersistedTab,
@@ -41,23 +42,26 @@ const sharedBaselines = new Map<
 export function readShortcutOverrides(): Record<string, string> {
   const row = getDatabase()
     .database.select()
-    .from(settings)
+    .from(settingTable)
     .where(
-      and(eq(settings.profileId, PROFILE_ID), eq(settings.key, "shortcuts")),
+      and(
+        eq(settingTable.profileId, PROFILE_ID),
+        eq(settingTable.key, "shortcuts"),
+      ),
     )
     .get();
   return parseJson<Record<string, string>>(row?.value, {});
 }
 export function writeShortcutOverrides(value: Record<string, string>) {
   getDatabase()
-    .database.insert(settings)
+    .database.insert(settingTable)
     .values({
       profileId: PROFILE_ID,
       key: "shortcuts",
       value: JSON.stringify(value),
     })
     .onConflictDoUpdate({
-      target: [settings.profileId, settings.key],
+      target: [settingTable.profileId, settingTable.key],
       set: { value: JSON.stringify(value) },
     })
     .run();
@@ -69,55 +73,62 @@ function initializeDatabase(userDataPath: string) {
   sqlite = new Database(path.join(userDataPath, "gorth-browser.db"));
   sqlite.pragma("journal_mode = WAL");
   sqlite.pragma("foreign_keys = ON");
-  sqlite.exec(userProfilesMigration);
+  try {
+    migrateSingularTables(sqlite);
+  } catch (error) {
+    sqlite.close();
+    sqlite = null;
+    throw error;
+  }
+  sqlite.exec(userProfileMigration);
   sqlite.exec(`
-    CREATE TABLE IF NOT EXISTS profiles (id TEXT PRIMARY KEY, name TEXT NOT NULL, created_at INTEGER NOT NULL);
-    CREATE TABLE IF NOT EXISTS settings (profile_id TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY(profile_id, key));
-    CREATE TABLE IF NOT EXISTS tabs (id TEXT PRIMARY KEY, profile_id TEXT NOT NULL, position INTEGER NOT NULL, title TEXT NOT NULL, url TEXT NOT NULL, favicon_url TEXT NOT NULL, is_muted INTEGER NOT NULL, is_pinned INTEGER NOT NULL, internal_page TEXT, is_active INTEGER NOT NULL);
-    CREATE TABLE IF NOT EXISTS tab_groups (id TEXT PRIMARY KEY, name TEXT NOT NULL DEFAULT 'Tab group', profile_id TEXT NOT NULL, mode TEXT NOT NULL, position INTEGER NOT NULL);
-    CREATE TABLE IF NOT EXISTS tab_group_members (group_id TEXT NOT NULL, tab_id TEXT NOT NULL, position INTEGER NOT NULL, PRIMARY KEY(group_id, tab_id));
-    CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY, profile_id TEXT NOT NULL, title TEXT NOT NULL, url TEXT NOT NULL, position INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS profile (id TEXT PRIMARY KEY, name TEXT NOT NULL, created_at INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS setting (profile_id TEXT NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY(profile_id, key));
+    CREATE TABLE IF NOT EXISTS tab (id TEXT PRIMARY KEY, profile_id TEXT NOT NULL, position INTEGER NOT NULL, title TEXT NOT NULL, url TEXT NOT NULL, favicon_url TEXT NOT NULL, is_muted INTEGER NOT NULL, is_pinned INTEGER NOT NULL, internal_page TEXT, is_active INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS tab_group (id TEXT PRIMARY KEY, name TEXT NOT NULL DEFAULT 'Tab group', profile_id TEXT NOT NULL, mode TEXT NOT NULL, position INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS tab_group_member (group_id TEXT NOT NULL, tab_id TEXT NOT NULL, position INTEGER NOT NULL, PRIMARY KEY(group_id, tab_id));
+    CREATE TABLE IF NOT EXISTS bookmark (id TEXT PRIMARY KEY, profile_id TEXT NOT NULL, title TEXT NOT NULL, url TEXT NOT NULL, position INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS history (id TEXT PRIMARY KEY, profile_id TEXT NOT NULL, tab_id TEXT NOT NULL, title TEXT NOT NULL, url TEXT NOT NULL, visited_at INTEGER NOT NULL);
     CREATE INDEX IF NOT EXISTS history_visited_at_idx ON history(visited_at DESC);
     CREATE TABLE IF NOT EXISTS recently_closed (id TEXT PRIMARY KEY, profile_id TEXT NOT NULL, tab_json TEXT NOT NULL, closed_at INTEGER NOT NULL);
     CREATE INDEX IF NOT EXISTS recently_closed_at_idx ON recently_closed(closed_at DESC);
-    CREATE TABLE IF NOT EXISTS windows (id TEXT PRIMARY KEY, x INTEGER, y INTEGER, width INTEGER NOT NULL, height INTEGER NOT NULL, is_maximized INTEGER NOT NULL);
-    CREATE TABLE IF NOT EXISTS downloads (id TEXT PRIMARY KEY, profile_id TEXT NOT NULL, filename TEXT NOT NULL, url TEXT NOT NULL, save_path TEXT NOT NULL, mime_type TEXT NOT NULL, received_bytes INTEGER NOT NULL, total_bytes INTEGER NOT NULL, state TEXT NOT NULL, started_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
-    CREATE INDEX IF NOT EXISTS downloads_started_at_idx ON downloads(started_at DESC);
+    CREATE TABLE IF NOT EXISTS "window" (id TEXT PRIMARY KEY, x INTEGER, y INTEGER, width INTEGER NOT NULL, height INTEGER NOT NULL, is_maximized INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS download (id TEXT PRIMARY KEY, profile_id TEXT NOT NULL, filename TEXT NOT NULL, url TEXT NOT NULL, save_path TEXT NOT NULL, mime_type TEXT NOT NULL, received_bytes INTEGER NOT NULL, total_bytes INTEGER NOT NULL, state TEXT NOT NULL, started_at INTEGER NOT NULL, updated_at INTEGER NOT NULL);
+    CREATE INDEX IF NOT EXISTS download_started_at_idx ON download(started_at DESC);
   `);
-  const groupColumns = sqlite
-    .prepare("PRAGMA table_info(tab_groups)")
-    .all() as { name: string }[];
+  const groupColumns = sqlite.prepare("PRAGMA table_info(tab_group)").all() as {
+    name: string;
+  }[];
   if (!groupColumns.some((column) => column.name === "name")) {
     sqlite.exec(
-      "ALTER TABLE tab_groups ADD COLUMN name TEXT NOT NULL DEFAULT 'Tab group'",
+      "ALTER TABLE tab_group ADD COLUMN name TEXT NOT NULL DEFAULT 'Tab group'",
     );
   }
   for (const [table, column, definition] of [
-    ["tabs", "window_id", "TEXT NOT NULL DEFAULT 'main'"],
-    ["tabs", "lifecycle", "TEXT NOT NULL DEFAULT '{}'"],
-    ["tab_groups", "window_id", "TEXT NOT NULL DEFAULT 'main'"],
+    ["tab", "window_id", "TEXT NOT NULL DEFAULT 'main'"],
+    ["tab", "lifecycle", "TEXT NOT NULL DEFAULT '{}'"],
+    ["tab_group", "window_id", "TEXT NOT NULL DEFAULT 'main'"],
     ["recently_closed", "window_id", "TEXT NOT NULL DEFAULT 'main'"],
-    ["windows", "is_open", "INTEGER NOT NULL DEFAULT 1"],
+    ["window", "is_open", "INTEGER NOT NULL DEFAULT 1"],
   ]) {
-    const columns = sqlite.prepare(`PRAGMA table_info(${table})`).all() as {
+    const columns = sqlite.prepare(`PRAGMA table_info("${table}")`).all() as {
       name: string;
     }[];
     if (!columns.some((item) => item.name === column))
-      sqlite.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+      sqlite.exec(`ALTER TABLE "${table}" ADD COLUMN ${column} ${definition}`);
   }
   sqlite.exec(
-    "CREATE TABLE IF NOT EXISTS archived_tabs (id TEXT PRIMARY KEY, window_id TEXT NOT NULL, tab_json TEXT NOT NULL, archived_at INTEGER NOT NULL)",
+    "CREATE TABLE IF NOT EXISTS archived_tab (id TEXT PRIMARY KEY, window_id TEXT NOT NULL, tab_json TEXT NOT NULL, archived_at INTEGER NOT NULL)",
   );
   database = drizzle({ client: sqlite });
   // DownloadItems cannot survive an application restart. Retain their history for retry.
   sqlite
     .prepare(
-      "UPDATE downloads SET state = 'interrupted' WHERE state IN ('progressing', 'paused')",
+      "UPDATE download SET state = 'interrupted' WHERE state IN ('progressing', 'paused')",
     )
     .run();
   database
-    .insert(profiles)
+    .insert(profileTable)
     .values({ id: PROFILE_ID, name: "Default", createdAt: Date.now() })
     .onConflictDoNothing()
     .run();
@@ -131,9 +142,9 @@ function getDatabase() {
 
 export function getRestoredWindowIds() {
   const ids = getDatabase()
-    .database.select({ id: windows.id })
-    .from(windows)
-    .where(eq(windows.isOpen, true))
+    .database.select({ id: windowTable.id })
+    .from(windowTable)
+    .where(eq(windowTable.isOpen, true))
     .all()
     .map((row) => row.id);
   return ids.length ? ids : [WINDOW_ID];
@@ -141,27 +152,29 @@ export function getRestoredWindowIds() {
 
 export function setWindowOpen(windowId: string, isOpen: boolean) {
   getDatabase()
-    .database.update(windows)
+    .database.update(windowTable)
     .set({ isOpen })
-    .where(eq(windows.id, windowId))
+    .where(eq(windowTable.id, windowId))
     .run();
 }
 
 export function readBrowserSetting<Value>(key: string, fallback: Value): Value {
   const row = getDatabase()
     .database.select()
-    .from(settings)
-    .where(and(eq(settings.profileId, PROFILE_ID), eq(settings.key, key)))
+    .from(settingTable)
+    .where(
+      and(eq(settingTable.profileId, PROFILE_ID), eq(settingTable.key, key)),
+    )
     .get();
   return parseJson<Value>(row?.value, fallback);
 }
 
 export function writeBrowserSetting(key: string, value: unknown) {
   getDatabase()
-    .database.insert(settings)
+    .database.insert(settingTable)
     .values({ profileId: PROFILE_ID, key, value: JSON.stringify(value) })
     .onConflictDoUpdate({
-      target: [settings.profileId, settings.key],
+      target: [settingTable.profileId, settingTable.key],
       set: { value: JSON.stringify(value) },
     })
     .run();
@@ -170,8 +183,8 @@ export function writeBrowserSetting(key: string, value: unknown) {
 export function listArchivedTabs() {
   return getDatabase()
     .database.select()
-    .from(archivedTabs)
-    .orderBy(desc(archivedTabs.archivedAt))
+    .from(archivedTabTable)
+    .orderBy(desc(archivedTabTable.archivedAt))
     .all()
     .map((row) => ({
       id: row.id,
@@ -186,7 +199,7 @@ export function archiveTab(tab: PersistedTab, windowId: string) {
   sqlite.transaction(() => {
     removeTabFromGroups(tab.id, windowId);
     database
-      .insert(archivedTabs)
+      .insert(archivedTabTable)
       .values({
         id: tab.id,
         windowId,
@@ -196,8 +209,8 @@ export function archiveTab(tab: PersistedTab, windowId: string) {
       .onConflictDoNothing()
       .run();
     database
-      .delete(tabs)
-      .where(and(eq(tabs.id, tab.id), eq(tabs.windowId, windowId)))
+      .delete(tabTable)
+      .where(and(eq(tabTable.id, tab.id), eq(tabTable.windowId, windowId)))
       .run();
   })();
 }
@@ -207,11 +220,11 @@ export function takeArchivedTab(id: string, removeOnly = false) {
   return sqlite.transaction(() => {
     const row = database
       .select()
-      .from(archivedTabs)
-      .where(eq(archivedTabs.id, id))
+      .from(archivedTabTable)
+      .where(eq(archivedTabTable.id, id))
       .get();
     if (!row) return null;
-    database.delete(archivedTabs).where(eq(archivedTabs.id, id)).run();
+    database.delete(archivedTabTable).where(eq(archivedTabTable.id, id)).run();
     return removeOnly
       ? null
       : parseJson<PersistedTab | null>(row.tabJson, null);
@@ -230,15 +243,15 @@ export function restoreArchivedTab(id: string, windowId: string) {
       lastActiveAt: Date.now(),
     };
     database
-      .insert(tabs)
+      .insert(tabTable)
       .values({
         id: tab.id,
         windowId,
         profileId: PROFILE_ID,
         position: database
           .select()
-          .from(tabs)
-          .where(eq(tabs.windowId, windowId))
+          .from(tabTable)
+          .where(eq(tabTable.windowId, windowId))
           .all().length,
         title: tab.title,
         url: tab.url,
@@ -272,8 +285,8 @@ function loadBrowserSnapshot(windowId = WINDOW_ID): BrowserSnapshot {
   const savedSettings = Object.fromEntries(
     database
       .select()
-      .from(settings)
-      .where(eq(settings.profileId, PROFILE_ID))
+      .from(settingTable)
+      .where(eq(settingTable.profileId, PROFILE_ID))
       .all()
       .map((row) => [row.key, row.value]),
   );
@@ -297,27 +310,29 @@ function loadBrowserSnapshot(windowId = WINDOW_ID): BrowserSnapshot {
   );
   const savedTabs = database
     .select()
-    .from(tabs)
-    .where(and(eq(tabs.profileId, PROFILE_ID), eq(tabs.windowId, windowId)))
-    .orderBy(asc(tabs.position))
+    .from(tabTable)
+    .where(
+      and(eq(tabTable.profileId, PROFILE_ID), eq(tabTable.windowId, windowId)),
+    )
+    .orderBy(asc(tabTable.position))
     .all();
   const splitGroup = database
     .select()
-    .from(tabGroups)
+    .from(tabGroupTable)
     .where(
       and(
-        eq(tabGroups.profileId, PROFILE_ID),
-        eq(tabGroups.windowId, windowId),
-        eq(tabGroups.mode, "split"),
+        eq(tabGroupTable.profileId, PROFILE_ID),
+        eq(tabGroupTable.windowId, windowId),
+        eq(tabGroupTable.mode, "split"),
       ),
     )
     .get();
   const splitMembers = splitGroup
     ? database
         .select()
-        .from(tabGroupMembers)
-        .where(eq(tabGroupMembers.groupId, splitGroup.id))
-        .orderBy(asc(tabGroupMembers.position))
+        .from(tabGroupMemberTable)
+        .where(eq(tabGroupMemberTable.groupId, splitGroup.id))
+        .orderBy(asc(tabGroupMemberTable.position))
         .all()
     : [];
   const snapshot: BrowserSnapshot = {
@@ -345,9 +360,9 @@ function loadBrowserSnapshot(windowId = WINDOW_ID): BrowserSnapshot {
     })),
     bookmarks: database
       .select()
-      .from(bookmarks)
-      .where(eq(bookmarks.profileId, PROFILE_ID))
-      .orderBy(asc(bookmarks.position))
+      .from(bookmarkTable)
+      .where(eq(bookmarkTable.profileId, PROFILE_ID))
+      .orderBy(asc(bookmarkTable.position))
       .all()
       .map(({ id, title, url }) => ({ id, title, url })),
     history: database
@@ -380,8 +395,13 @@ function saveBrowserSnapshot(snapshot: BrowserSnapshot, windowId = WINDOW_ID) {
   const { database, sqlite } = getDatabase();
   sqlite.transaction(() => {
     database
-      .delete(tabs)
-      .where(and(eq(tabs.profileId, PROFILE_ID), eq(tabs.windowId, windowId)))
+      .delete(tabTable)
+      .where(
+        and(
+          eq(tabTable.profileId, PROFILE_ID),
+          eq(tabTable.windowId, windowId),
+        ),
+      )
       .run();
     // Apply only this window's changes to shared data. A stale window snapshot
     // must never delete or overwrite another window's newly added entries.
@@ -391,47 +411,50 @@ function saveBrowserSnapshot(snapshot: BrowserSnapshot, windowId = WINDOW_ID) {
     };
     for (const row of baseline.bookmarks) {
       if (!snapshot.bookmarks.some((item) => item.id === row.id))
-        database.delete(bookmarks).where(eq(bookmarks.id, row.id)).run();
+        database
+          .delete(bookmarkTable)
+          .where(eq(bookmarkTable.id, row.id))
+          .run();
     }
     for (const row of baseline.history) {
       if (!snapshot.history.some((item) => item.id === row.id))
         database.delete(history).where(eq(history.id, row.id)).run();
     }
     database
-      .insert(settings)
+      .insert(settingTable)
       .values({
         profileId: PROFILE_ID,
         key: `preferences:${windowId}`,
         value: JSON.stringify(snapshot.preferences),
       })
       .onConflictDoUpdate({
-        target: [settings.profileId, settings.key],
+        target: [settingTable.profileId, settingTable.key],
         set: { value: JSON.stringify(snapshot.preferences) },
       })
       .run();
     database
-      .insert(settings)
+      .insert(settingTable)
       .values({
         profileId: PROFILE_ID,
         key: `splitTabId:${windowId}`,
         value: JSON.stringify(snapshot.splitTabId),
       })
       .onConflictDoUpdate({
-        target: [settings.profileId, settings.key],
+        target: [settingTable.profileId, settingTable.key],
         set: { value: JSON.stringify(snapshot.splitTabId) },
       })
       .run();
     const openTabs = snapshot.tabs.filter(
       (tab) =>
         !database
-          .select({ id: archivedTabs.id })
-          .from(archivedTabs)
-          .where(eq(archivedTabs.id, tab.id))
+          .select({ id: archivedTabTable.id })
+          .from(archivedTabTable)
+          .where(eq(archivedTabTable.id, tab.id))
           .get(),
     );
     if (openTabs.length)
       database
-        .insert(tabs)
+        .insert(tabTable)
         .values(
           openTabs.map((tab, position) => ({
             ...tab,
@@ -455,10 +478,10 @@ function saveBrowserSnapshot(snapshot: BrowserSnapshot, windowId = WINDOW_ID) {
       )
         return;
       database
-        .insert(bookmarks)
+        .insert(bookmarkTable)
         .values({ ...item, profileId: PROFILE_ID, position })
         .onConflictDoUpdate({
-          target: bookmarks.id,
+          target: bookmarkTable.id,
           set: { ...item, position },
         })
         .run();
@@ -489,14 +512,14 @@ function loadTabGroups(windowId = WINDOW_ID): PersistedTabGroup[] {
   const { database } = getDatabase();
   return database
     .select()
-    .from(tabGroups)
+    .from(tabGroupTable)
     .where(
       and(
-        eq(tabGroups.profileId, PROFILE_ID),
-        eq(tabGroups.windowId, windowId),
+        eq(tabGroupTable.profileId, PROFILE_ID),
+        eq(tabGroupTable.windowId, windowId),
       ),
     )
-    .orderBy(asc(tabGroups.position))
+    .orderBy(asc(tabGroupTable.position))
     .all()
     .map((group) => ({
       id: group.id,
@@ -504,9 +527,9 @@ function loadTabGroups(windowId = WINDOW_ID): PersistedTabGroup[] {
       mode: group.mode as PersistedTabGroup["mode"],
       tabIds: database
         .select()
-        .from(tabGroupMembers)
-        .where(eq(tabGroupMembers.groupId, group.id))
-        .orderBy(asc(tabGroupMembers.position))
+        .from(tabGroupMemberTable)
+        .where(eq(tabGroupMemberTable.groupId, group.id))
+        .orderBy(asc(tabGroupMemberTable.position))
         .all()
         .map((member) => member.tabId),
     }));
@@ -515,17 +538,19 @@ function loadTabGroups(windowId = WINDOW_ID): PersistedTabGroup[] {
 function saveTabGroup(group: PersistedTabGroup, windowId = WINDOW_ID) {
   const { database, sqlite } = getDatabase();
   const owner = database
-    .select({ windowId: tabGroups.windowId })
-    .from(tabGroups)
-    .where(eq(tabGroups.id, group.id))
+    .select({ windowId: tabGroupTable.windowId })
+    .from(tabGroupTable)
+    .where(eq(tabGroupTable.id, group.id))
     .get();
   if (owner && owner.windowId !== windowId)
     throw new Error("This group belongs to another window.");
   const existing = loadTabGroups(windowId);
   const savedTabs = database
     .select()
-    .from(tabs)
-    .where(and(eq(tabs.profileId, PROFILE_ID), eq(tabs.windowId, windowId)))
+    .from(tabTable)
+    .where(
+      and(eq(tabTable.profileId, PROFILE_ID), eq(tabTable.windowId, windowId)),
+    )
     .all();
   if (group.tabIds.some((id) => !savedTabs.some((tab) => tab.id === id))) {
     throw new Error("One of the selected tabs is no longer open.");
@@ -551,7 +576,7 @@ function saveTabGroup(group: PersistedTabGroup, windowId = WINDOW_ID) {
   }
   sqlite.transaction(() => {
     database
-      .insert(tabGroups)
+      .insert(tabGroupTable)
       .values({
         id: group.id,
         windowId,
@@ -564,16 +589,16 @@ function saveTabGroup(group: PersistedTabGroup, windowId = WINDOW_ID) {
             : existing.findIndex((item) => item.id === group.id),
       })
       .onConflictDoUpdate({
-        target: tabGroups.id,
+        target: tabGroupTable.id,
         set: { name: group.name, mode: group.mode },
       })
       .run();
     database
-      .delete(tabGroupMembers)
-      .where(eq(tabGroupMembers.groupId, group.id))
+      .delete(tabGroupMemberTable)
+      .where(eq(tabGroupMemberTable.groupId, group.id))
       .run();
     database
-      .insert(tabGroupMembers)
+      .insert(tabGroupMemberTable)
       .values(
         group.tabIds.map((tabId, position) => ({
           groupId: group.id,
@@ -592,12 +617,14 @@ function deleteTabGroup(id: string, windowId = WINDOW_ID) {
     return loadTabGroups(windowId);
   sqlite.transaction(() => {
     database
-      .delete(tabGroupMembers)
-      .where(eq(tabGroupMembers.groupId, id))
+      .delete(tabGroupMemberTable)
+      .where(eq(tabGroupMemberTable.groupId, id))
       .run();
     database
-      .delete(tabGroups)
-      .where(and(eq(tabGroups.id, id), eq(tabGroups.profileId, PROFILE_ID)))
+      .delete(tabGroupTable)
+      .where(
+        and(eq(tabGroupTable.id, id), eq(tabGroupTable.profileId, PROFILE_ID)),
+      )
       .run();
   })();
   return loadTabGroups(windowId);
@@ -665,8 +692,8 @@ function loadWindowState(windowId = WINDOW_ID): PersistedWindowState | null {
   const { database } = getDatabase();
   const row = database
     .select()
-    .from(windows)
-    .where(eq(windows.id, windowId))
+    .from(windowTable)
+    .where(eq(windowTable.id, windowId))
     .get();
   return row
     ? {
@@ -682,9 +709,9 @@ function loadWindowState(windowId = WINDOW_ID): PersistedWindowState | null {
 function saveWindowState(state: PersistedWindowState, windowId = WINDOW_ID) {
   const { database } = getDatabase();
   database
-    .insert(windows)
+    .insert(windowTable)
     .values({ id: windowId, ...state })
-    .onConflictDoUpdate({ target: windows.id, set: state })
+    .onConflictDoUpdate({ target: windowTable.id, set: state })
     .run();
 }
 
@@ -698,33 +725,38 @@ function closeDatabase() {
 function loadDownloads(): DownloadRecord[] {
   return getDatabase()
     .database.select()
-    .from(downloads)
-    .where(eq(downloads.profileId, PROFILE_ID))
-    .orderBy(desc(downloads.startedAt))
+    .from(downloadTable)
+    .where(eq(downloadTable.profileId, PROFILE_ID))
+    .orderBy(desc(downloadTable.startedAt))
     .all();
 }
 
 function saveDownload(record: DownloadRecord) {
   getDatabase()
-    .database.insert(downloads)
+    .database.insert(downloadTable)
     .values({ ...record, profileId: PROFILE_ID })
-    .onConflictDoUpdate({ target: downloads.id, set: record })
+    .onConflictDoUpdate({ target: downloadTable.id, set: record })
     .run();
 }
 
 function deleteDownload(id: string) {
   getDatabase()
-    .database.delete(downloads)
-    .where(and(eq(downloads.id, id), eq(downloads.profileId, PROFILE_ID)))
+    .database.delete(downloadTable)
+    .where(
+      and(eq(downloadTable.id, id), eq(downloadTable.profileId, PROFILE_ID)),
+    )
     .run();
 }
 
 function loadDownloadPreferences(directory: string): DownloadPreferences {
   const row = getDatabase()
     .database.select()
-    .from(settings)
+    .from(settingTable)
     .where(
-      and(eq(settings.profileId, PROFILE_ID), eq(settings.key, "downloads")),
+      and(
+        eq(settingTable.profileId, PROFILE_ID),
+        eq(settingTable.key, "downloads"),
+      ),
     )
     .get();
   const saved = parseJson<Partial<DownloadPreferences>>(row?.value, {});
@@ -740,14 +772,14 @@ function loadDownloadPreferences(directory: string): DownloadPreferences {
 
 function saveDownloadPreferences(value: DownloadPreferences) {
   getDatabase()
-    .database.insert(settings)
+    .database.insert(settingTable)
     .values({
       profileId: PROFILE_ID,
       key: "downloads",
       value: JSON.stringify(value),
     })
     .onConflictDoUpdate({
-      target: [settings.profileId, settings.key],
+      target: [settingTable.profileId, settingTable.key],
       set: { value: JSON.stringify(value) },
     })
     .run();

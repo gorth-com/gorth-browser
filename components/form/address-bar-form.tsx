@@ -8,7 +8,7 @@ export function AddressBarForm({
   onSubmit: FormEventHandler<HTMLFormElement>;
 }) {
   return (
-    <form className="app-no-drag relative min-w-24 flex-1" onSubmit={onSubmit}>
+    <form className="[-webkit-app-region:no-drag] relative min-w-24 flex-1" onSubmit={onSubmit}>
       {children}
     </form>
   );

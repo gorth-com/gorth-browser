@@ -1,7 +1,8 @@
+import { ErrorFeedback } from "@/components/element/error-feedback";
 import { useEffect, useState } from "react";
-import { Download, FolderOpen } from "lucide-react";
+import { Download, FolderOpen } from "@gorth-io/primitive/cores/lucide";
 import { PopoverMenuItem } from "@/components/element/popover-menu";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@gorth-io/primitive/default/separator";
 import type { DownloadInfo } from "@/lib/browser/downloads";
 
 export function RecentDownloads({
@@ -87,11 +88,7 @@ export function RecentDownloads({
       >
         <FolderOpen /> Show all
       </PopoverMenuItem>
-      {error && downloads.length > 0 && (
-        <span role="alert" className="sr-only">
-          {error}
-        </span>
-      )}
+      {error && downloads.length > 0 && <ErrorFeedback message={error} />}
     </div>
   );
 }

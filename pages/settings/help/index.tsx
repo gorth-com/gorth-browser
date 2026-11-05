@@ -1,16 +1,21 @@
-import { ExternalLink, Info, Rocket, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { internalPageDefinitions } from "@/utils/constant";
+import { FoldersCard } from "@/components/element/folders-card";
+import {
+  ExternalLink,
+  Info,
+  Rocket,
+  Sparkles,
+} from "@gorth-io/primitive/cores/lucide";
+import { Button } from "@gorth-io/primitive/custom/button";
+import { AppUpdateCard } from "@/components/element/app-update-card";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import {
-  internalPageDefinitions,
-  type BrowserInternalPage,
-} from "@/lib/browser/internal-pages";
+} from "@gorth-io/primitive/default/card";
+import { type BrowserInternalPage } from "@/lib/browser/internal-pages";
 import { type SpecialPageProps, PageShell } from "@/pages/shared";
 function AboutPage({
   onOpenInternal,
@@ -18,11 +23,10 @@ function AboutPage({
   onOpenInternal: SpecialPageProps["onOpenInternal"];
 }) {
   return (
-    <PageShell
-      description="Internal addresses supported by the browser."
-      icon={Info}
-      title="Gorth Browser"
-    >
+    <PageShell icon={Info} title="Gorth Browser">
+      <div className="mb-6">
+        <AppUpdateCard />
+      </div>
       <div className="mb-6 grid gap-4 sm:grid-cols-2">
         <Card>
           <CardHeader>
@@ -77,6 +81,10 @@ function AboutPage({
           ))}
         </CardContent>
       </Card>
+      <section className="mt-6 flex flex-col gap-4" aria-label="Folders">
+        <CardTitle>Folders</CardTitle>
+        <FoldersCard />
+      </section>
     </PageShell>
   );
 }

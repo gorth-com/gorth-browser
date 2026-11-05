@@ -1,17 +1,17 @@
-import { Clock3, Trash2 } from "lucide-react";
+import { Clock3, Trash2 } from "@gorth-io/primitive/cores/lucide";
 import { useMemo } from "react";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@gorth-io/primitive/cores/tanstack/table";
 import { DataTable, dataTableFeatures } from "@/components/custom/data-table";
-import { Button } from "@/components/ui/button";
+import { Button } from "@gorth-io/primitive/custom/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { formatDateTime } from "@/lib/utils/formatter";
+} from "@gorth-io/primitive/default/card";
+import { Separator } from "@gorth-io/primitive/default/separator";
+import { formatDateTime } from "@/utils/formatter";
 import {
   type BrowserHistoryItem,
   PageShell,
@@ -90,11 +90,7 @@ function HistoryPage({
     [onClear, onNavigate, onOpenInNewTab, onRemove],
   );
   return (
-    <PageShell
-      description="Websites opened during this session."
-      icon={Clock3}
-      title="History"
-    >
+    <PageShell icon={Clock3} title="History">
       {history.length ? (
         <Card>
           <CardHeader className="flex-row items-center justify-between">

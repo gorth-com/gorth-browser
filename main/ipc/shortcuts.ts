@@ -1,3 +1,4 @@
+import { shortcutDefinitions } from "@/utils/constant";
 import {
   BrowserWindow,
   app,
@@ -6,55 +7,21 @@ import {
   type MenuItemConstructorOptions,
   type WebContents,
 } from "electron";
-import { z } from "zod";
+import { z } from "@gorth-io/structure/cores/zod";
 import {
   normalizeAccelerator,
   shortcutIdentity,
   validateShortcutChange,
   type Shortcut,
-  type ShortcutDefinition,
 } from "@/lib/shortcuts";
 import {
   readShortcutOverrides,
   writeShortcutOverrides,
 } from "@/services/browser-database";
 
-const definitions: ShortcutDefinition[] = [
-  { id: "new-tab", label: "New Tab", defaultAccelerator: "CmdOrCtrl+T" },
-  { id: "new-window", label: "New Window", defaultAccelerator: "CmdOrCtrl+N" },
-  { id: "close-tab", label: "Close Tab", defaultAccelerator: "CmdOrCtrl+W" },
-  {
-    id: "reopen-closed-tab",
-    label: "Reopen Closed Tab",
-    defaultAccelerator: "CmdOrCtrl+Shift+T",
-  },
-  {
-    id: "find-in-page",
-    label: "Find in Page",
-    defaultAccelerator: "CmdOrCtrl+F",
-  },
-  { id: "reload-tab", label: "Reload", defaultAccelerator: "CmdOrCtrl+R" },
-  {
-    id: "force-reload-tab",
-    label: "Force Reload",
-    defaultAccelerator: "CmdOrCtrl+Shift+R",
-  },
-  { id: "next-tab", label: "Next Tab", defaultAccelerator: "Ctrl+Tab" },
-  {
-    id: "previous-tab",
-    label: "Previous Tab",
-    defaultAccelerator: "Ctrl+Shift+Tab",
-  },
-  { id: "settings", label: "Settings…", defaultAccelerator: "CmdOrCtrl+," },
-  {
-    id: "shortcuts",
-    label: "Keyboard Shortcuts",
-    defaultAccelerator: "CmdOrCtrl+Shift+K",
-  },
-];
 let overrides: Record<string, string> = {};
 export function listShortcuts(): Shortcut[] {
-  return definitions.map((definition) => ({
+  return shortcutDefinitions.map((definition) => ({
     ...definition,
     accelerator: overrides[definition.id] ?? definition.defaultAccelerator,
   }));
@@ -105,7 +72,7 @@ export function registerShortcutsIpc(
         !owner.webContents
           .getURL()
           .split(/[?#]/)[0]
-          .endsWith("/assets/index.html")
+          .endsWith("/public/index.html")
       )
         return;
       const key = /^Key[A-Z]$/.test(input.code)
@@ -151,7 +118,7 @@ export function registerShortcutsIpc(
     console.warn("Unable to load saved shortcuts; using defaults.", error);
   }
   // Resolve all overrides together so swapping two bindings survives restart.
-  for (const definition of definitions) {
+  for (const definition of shortcutDefinitions) {
     if (saved[definition.id] !== undefined) {
       try {
         overrides[definition.id] = normalizeAccelerator(saved[definition.id]);
@@ -164,7 +131,7 @@ export function registerShortcutsIpc(
       }
     }
   }
-  for (const definition of definitions) {
+  for (const definition of shortcutDefinitions) {
     if (saved[definition.id] !== undefined) {
       try {
         overrides[definition.id] = validateShortcutChange(
@@ -207,7 +174,7 @@ export function registerShortcutsIpc(
     const next = { ...overrides };
     if (id !== undefined) {
       const key = z.string().parse(id);
-      const definition = definitions.find((item) => item.id === key);
+      const definition = shortcutDefinitions.find((item) => item.id === key);
       if (!definition) throw new Error("Unknown shortcut.");
       validateShortcutChange(
         listShortcuts(),

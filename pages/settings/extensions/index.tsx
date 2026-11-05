@@ -1,18 +1,14 @@
-import { Puzzle } from "lucide-react";
+import { Puzzle } from "@gorth-io/primitive/cores/lucide";
 import { PageShell } from "@/pages/shared";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
+} from "@gorth-io/primitive/default/card";
 export function SettingsSectionPage() {
   return (
-    <PageShell
-      icon={Puzzle}
-      title="Extensions"
-      description="Configure extension preferences."
-    >
+    <PageShell icon={Puzzle} title="Extensions">
       <Card>
         <CardHeader>
           <CardTitle>Extensions</CardTitle>

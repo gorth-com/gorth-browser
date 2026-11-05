@@ -1,13 +1,11 @@
+import { internalPageDefinitions } from "@/utils/constant";
 import { createRoot } from "react-dom/client";
 import { useEffect, useState } from "react";
 import { AuthScreen } from "@/components/element/auth-screen";
-import { Titlebar } from "@/layouts/titlebar";
+import { Titlebar } from "@/layouts/title-bar";
 import { TooltipProvider } from "@/providers/tooltip";
 import { TabIcon } from "@/components/element/tab-icon";
-import {
-  internalPageDefinitions,
-  type BrowserInternalPage,
-} from "@/lib/browser/internal-pages";
+import { type BrowserInternalPage } from "@/lib/browser/internal-pages";
 import type { AuthViewState } from "@/lib/auth/view-types";
 
 declare global {

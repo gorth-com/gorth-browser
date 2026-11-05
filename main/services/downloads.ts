@@ -1,3 +1,4 @@
+import { requestConfirmation } from "@/main/services/confirmation";
 import {
   app,
   dialog,
@@ -17,7 +18,7 @@ import {
   saveDownloadPreferences,
 } from "@/services/browser-database";
 import type { DownloadRecord, DownloadInfo } from "@/lib/browser/downloads";
-import { parseHttpUrl } from "@/lib/utils/schema";
+import { parseHttpUrl } from "@/utils/schema";
 import { getBrowserWindows } from "@/main/windows/capital";
 import { getAvailableDownloadPath, getSafeDownloadName } from "./download-path";
 
@@ -348,16 +349,14 @@ export async function openDownload(
       record.filename,
     )
   ) {
-    const choice = await dialog.showMessageBox(window, {
-      type: "warning",
+    const accepted = await requestConfirmation(window, {
       title: "Open downloaded file?",
-      message: "Only open this file if you trust its source.",
-      detail: record.filename,
-      buttons: ["Cancel", "Open file"],
-      defaultId: 0,
-      cancelId: 0,
+      description:
+        "Only open this file if you trust its source. " + record.filename,
+      confirmLabel: "Open file",
+      destructive: true,
     });
-    if (choice.response !== 1) return;
+    if (!accepted) return;
   }
   const error = await shell.openPath(record.savePath);
   if (error) throw new Error(error);

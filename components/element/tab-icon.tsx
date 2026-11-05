@@ -1,43 +1,6 @@
-import {
-  Bookmark,
-  CircleAlert,
-  Clock3,
-  Download,
-  FlaskConical,
-  Globe2,
-  House,
-  LoaderCircle,
-  Puzzle,
-  Settings,
-  CircleHelp,
-  Rocket,
-  Sparkles,
-  Keyboard,
-  Archive,
-  UserRound,
-  type LucideIcon,
-} from "lucide-react";
+import { internalIcons } from "@/utils/constant";
+import { Globe2, LoaderCircle, Settings } from "@gorth-io/primitive/cores/lucide";
 import type { BrowserInternalPage } from "@/lib/browser/internal-pages";
-
-const internalIcons = {
-  auth: UserRound,
-  archive: Archive,
-  shortcuts: Keyboard,
-  help: CircleHelp,
-  welcome: Rocket,
-  "whats-new": Sparkles,
-  error: CircleAlert,
-  "new-tab": House,
-  settings: Settings,
-  downloads: Download,
-  bookmarks: Bookmark,
-  history: Clock3,
-  flags: FlaskConical,
-  extensions: Puzzle,
-} satisfies Record<
-  Exclude<BrowserInternalPage, `settings/${string}`>,
-  LucideIcon
->;
 
 function TabIcon({
   internalPage,

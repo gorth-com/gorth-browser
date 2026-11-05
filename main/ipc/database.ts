@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import { z } from "zod";
+import { z } from "@gorth-io/structure/cores/zod";
 import {
   addRecentlyClosedTab,
   loadBrowserSnapshot,

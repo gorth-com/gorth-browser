@@ -1,4 +1,7 @@
 import type { BrowserWindow } from "electron";
+import { applyStartupPreferences } from "@/lib/browser/setup";
+import { getSetupPreferences } from "@/main/services/browser-setup";
+const initializedSessions = new WeakSet<BrowserWindow>();
 import { archiveTab, writeBrowserSetting } from "@/services/browser-database";
 import type { BrowserSnapshot, PersistedTab } from "@/lib/browser/persistence";
 import { shouldSleepTab } from "@/lib/browser/lifecycle";
@@ -13,6 +16,12 @@ import {
 import { destroyWebview } from "@/main/windows/webview";
 import { hasActiveTabDownload } from "@/main/services/downloads";
 import { loadWebsite } from "@/main/services/navigation";
+import { getSystemPreferences } from "@/main/services/system-preferences";
+import {
+  isAlwaysActive,
+  effectiveSleepPreferences,
+} from "@/lib/browser/system";
+import { systemSnapshot } from "@/main/services/system";
 
 export function synchronizeTabSession(
   window: BrowserWindow,
@@ -124,6 +133,10 @@ export function restoreTabSession(
   window: BrowserWindow,
   snapshot: BrowserSnapshot,
 ) {
+  if (!initializedSessions.has(window)) {
+    snapshot = applyStartupPreferences(snapshot, getSetupPreferences());
+    initializedSessions.add(window);
+  }
   const state = getBrowserState(window);
   synchronizeTabSession(window, snapshot);
   state.activeTabId = snapshot.activeTabId;
@@ -140,6 +153,7 @@ export function restoreTabSession(
       tab.id === snapshot.splitTabId ||
       tab.isPinned ||
       state.groupedTabIds.has(tab.id) ||
+      isAlwaysActive(tab.url, getSystemPreferences().activeSites) ||
       !snapshot.preferences.flags.memorySaver
     ) {
       tab.isSleeping = false;
@@ -160,6 +174,7 @@ async function tabIsProtected(window: BrowserWindow, tabId: string) {
     state.views.get(tabId)?.transientAuth ||
     tab.internalPage ||
     tab.isPinned ||
+    isAlwaysActive(tab.url, getSystemPreferences().activeSites) ||
     state.groupedTabIds.has(tabId) ||
     state.activeTabId === tabId ||
     state.splitTabId === tabId ||
@@ -195,6 +210,7 @@ export async function sleepTab(window: BrowserWindow, tabId: string) {
   if (
     !tab ||
     !record ||
+    isAlwaysActive(tab.url, getSystemPreferences().activeSites) ||
     state.activeTabId === tabId ||
     state.splitTabId === tabId
   )
@@ -220,7 +236,12 @@ export async function archiveBrowserTab(window: BrowserWindow, tabId: string) {
   if (state.views.get(tabId)?.transientAuth) return false;
   if (await tabIsProtected(window, tabId)) return false;
   const tab = captureTabNavigation(window, tabId);
-  if (!tab || state.activeTabId === tabId || state.splitTabId === tabId)
+  if (
+    !tab ||
+    isAlwaysActive(tab.url, getSystemPreferences().activeSites) ||
+    state.activeTabId === tabId ||
+    state.splitTabId === tabId
+  )
     return false;
   archiveTab(tab, state.sessionId);
   state.archivedTabIds.add(tabId);
@@ -239,14 +260,20 @@ export function trackTabLifecycle(window: BrowserWindow) {
     checking = true;
     try {
       const state = getBrowserState(window);
+      const system = systemSnapshot();
       for (const [id, tab] of state.tabMetadata) {
         if (window.isDestroyed()) break;
         const now = Date.now();
         const lastActiveAt = tab.lastActiveAt ?? now;
         const preferences = {
           ...state.preferences,
-          memorySaver: state.preferences.flags.memorySaver,
+          ...effectiveSleepPreferences(state.preferences, system.energyActive),
         };
+        // Exceptions apply to automatic sleep AND archive. Wake sites added while asleep.
+        if (isAlwaysActive(tab.url, system.preferences.activeSites)) {
+          if (tab.isSleeping) await wakeTab(window, id);
+          continue;
+        }
         if (
           preferences.archiveAfterDays > 0 &&
           now - lastActiveAt >= preferences.archiveAfterDays * 86_400_000

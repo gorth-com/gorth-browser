@@ -4,7 +4,7 @@ import tsPlugin from "@typescript-eslint/eslint-plugin";
 import globals from "globals";
 
 export default [
-  { ignores: ["node_modules/**", ".vite/**", "out/**", "dist/**"] },
+  { ignores: ["node_modules/**", ".nitro/**", ".vite/**", "out/**", "dist/**"] },
   {
     files: ["**/*.{ts,tsx,mjs}"],
     languageOptions: {

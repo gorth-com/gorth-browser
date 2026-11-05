@@ -1,4 +1,24 @@
 import path from "node:path";
+import { initializeSystemStartup, quitBrowserForShutdown, registerSystemIpc, startSystemPowerMonitor } from "@/main/services/system";
+import { registerFolderIpc } from "@/main/services/folders";
+import { initializeNetworkProxy } from "@/main/services/proxy";
+import { getSetupPreferences } from "@/main/services/browser-setup";
+import { MAIN_WINDOW_ID } from "@/utils/constant";
+import { installBrowserLinks } from "@/main/services/browser-links";
+import { registerSetupIpc } from "@/main/ipc/setup";
+import { initializeSecureStorage } from "@/lib/auth/storage";
+import { registerUpdateIpc } from "@/main/services/updates";
+import {
+  authScheme,
+  installGorthAuth,
+  receiveGorthDeepLink,
+} from "@/lib/auth/gorth";
+import { prepareAuthProtocol } from "@/main/services/auth-protocol";
+import {
+  registerLoginNavigation,
+  receiveLoginNavigation,
+} from "@/main/services/login-navigation";
+import { installDevelopmentLifecycle } from "@/main/services/development-lifecycle";
 import {
   startDesktopServer,
   stopDesktopServer,
@@ -44,6 +64,7 @@ import { registerShortcutsIpc } from "@/main/ipc/shortcuts";
 import { sendAppAction } from "@/main/ipc/native-menu";
 
 protocol.registerSchemesAsPrivileged([
+  { scheme: authScheme, privileges: { secure: true } },
   {
     scheme: "gorth",
     privileges: {
@@ -56,6 +77,8 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
+installDevelopmentLifecycle(MAIN_WINDOW_VITE_DEV_SERVER_URL, quitBrowserForShutdown);
+
 if (started) {
   app.quit();
 }
@@ -63,7 +86,18 @@ if (started) {
 app.setName(APP_NAME);
 
 configureDataDirectory();
+async function receiveBrowserLink(url: string) {
+  return receiveLoginNavigation(url) || (await receiveGorthDeepLink(url));
+}
+registerLoginNavigation(receiveGorthDeepLink);
+// Electron permits privileged scheme registration only once, before ready.
+installGorthAuth({ registerScheme: false, onDeepLink: receiveBrowserLink });
+for (const argument of process.argv) {
+  if (argument.startsWith(authScheme + "://auth/open?"))
+    void receiveBrowserLink(argument);
+}
 const ownsDataDirectory = app.requestSingleInstanceLock();
+if (ownsDataDirectory) installBrowserLinks();
 if (!ownsDataDirectory) app.quit();
 app.on("second-instance", () => {
   const window = BrowserWindow.getAllWindows().find(
@@ -78,6 +112,7 @@ app.on("second-instance", () => {
 // Chromium feature switches must be selected before app readiness.
 if (ownsDataDirectory) {
   initializeDatabase(app.getPath("userData"));
+  initializeSystemStartup();
   if (
     !readBrowserSetting(
       "smoothScrolling",
@@ -98,21 +133,35 @@ app.setAboutPanelOptions({
 registerContextMenuIpc();
 registerBrowserIpc();
 registerWindowIpc();
+registerSetupIpc();
 registerDatabaseIpc();
 registerRpcIpc();
 registerDownloadIpc();
+registerFolderIpc();
+registerSystemIpc();
 registerTabLifecycleIpc();
 
 app
   .whenReady()
   .then(async () => {
     if (!ownsDataDirectory) return;
+    startSystemPowerMonitor();
+    try {
+      initializeSecureStorage();
+    } catch {
+      dialog.showErrorBox(
+        "Không thể truy cập kho khóa",
+        "Ứng dụng vẫn mở, nhưng phiên đã lưu chưa được mở khóa. Hãy cấp quyền Keychain rồi thử đăng nhập hoặc mở khóa phiên lại. Dữ liệu tài khoản được giữ nguyên.",
+      );
+    }
+    await initializeNetworkProxy();
     await startDesktopServer(
       !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
       path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}`),
       getAuthenticatedUserId,
     );
     registerAuthIpc();
+    registerUpdateIpc();
     installDownloadManager(session.defaultSession);
     await initializeContentBlocker();
     if (process.platform === "darwin") {
@@ -136,17 +185,27 @@ app
       else sendAppAction(id);
     });
     installApplicationMenu();
-    for (const id of getRestoredWindowIds()) createWindow(id);
+    const windowIds = getSetupPreferences().startup === "restore"
+      ? getRestoredWindowIds()
+      : [MAIN_WINDOW_ID];
+    for (const id of windowIds) createWindow(id);
+    try {
+      await prepareAuthProtocol(authScheme, receiveBrowserLink);
+    } catch {
+      console.warn("Could not register Gorth Browser login navigation.");
+    }
   })
-  .catch(() => {
+  .catch((error: unknown) => {
     dialog.showErrorBox(
       "Gorth Browser",
-      "Không khởi động được desktop server hoặc dữ liệu ứng dụng. Kiểm tra port ứng dụng rồi khởi động lại.",
+      error instanceof Error
+        ? error.message
+        : "Không khởi động được desktop server hoặc dữ liệu ứng dụng.",
     );
     app.quit();
   });
 
-app.on("before-quit", cancelAuth);
+app.on("will-quit", cancelAuth);
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
@@ -166,4 +225,4 @@ app.on("will-quit", () => {
   closeDatabase();
 });
 
-app.on("before-quit", stopDesktopServer);
+app.on("will-quit", stopDesktopServer);

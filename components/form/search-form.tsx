@@ -1,11 +1,11 @@
-import { useForm } from "@tanstack/react-form";
+import { useForm } from "@gorth-io/primitive/cores/tanstack/form";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from "@/components/ui/input-group";
-import { Search, ArrowRight } from "lucide-react";
+} from "@gorth-io/primitive/default/input-group";
+import { Search, ArrowRight } from "@gorth-io/primitive/cores/lucide";
 
 export function SearchForm({ onSubmit }: { onSubmit: (value: string) => void }) {
   const form = useForm({

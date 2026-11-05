@@ -1,12 +1,12 @@
-import { Beaker } from "lucide-react";
+import { Beaker } from "@gorth-io/primitive/cores/lucide";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
+} from "@gorth-io/primitive/default/card";
+import { Switch } from "@gorth-io/primitive/default/switch";
 import { type SpecialPageProps, PageShell } from "@/pages/shared";
 function FlagsPage({
   flags,
@@ -25,11 +25,7 @@ function FlagsPage({
     },
   ];
   return (
-    <PageShell
-      description="Experimental features may change or be removed."
-      icon={Beaker}
-      title="Gorth Flags"
-    >
+    <PageShell icon={Beaker} title="Gorth Flags">
       <Card>
         <CardHeader>
           <CardTitle>Experimental features</CardTitle>

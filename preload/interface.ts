@@ -1,5 +1,6 @@
 import type { BrowserInternalPage } from "@/lib/browser/internal-pages";
 export interface BrowserLayout {
+  spaceBarWidth?: number;
   verticalTabsWidth: number;
   sidebarSide: "left" | "right";
   top: number;
@@ -23,6 +24,12 @@ export interface BrowserTabState {
   internalPage: BrowserInternalPage | null;
 }
 export interface ElectronApi {
+  system: typeof import("@/preload/api/system").systemApi;
+  folders: typeof import("@/preload/api/folders").foldersApi;
+  networkProxy: typeof import("@/preload/api/proxy").networkProxyApi;
+  setup: typeof import("@/preload/api/setup").setupApi;
+  updates: typeof import("@/preload/api/updates").updateApi;
+  confirmation: typeof import("@/preload/api/confirmation").confirmationApi;
   rpc: typeof import("@/preload/api/rpc").rpcApi;
   lifecycle: typeof import("@/preload/api/lifecycle").lifecycleApi;
   shields: typeof import("@/preload/api/shields").shieldsApi;

@@ -1,4 +1,10 @@
 import { contextBridge } from "electron";
+import { systemApi } from "@/preload/api/system";
+import { foldersApi } from "@/preload/api/folders";
+import { networkProxyApi } from "@/preload/api/proxy";
+import { confirmationApi } from "@/preload/api/confirmation";
+import { setupApi } from "@/preload/api/setup";
+import { updateApi } from "@/preload/api/updates";
 import { rpcApi } from "@/preload/api/rpc";
 import { shortcutsApi } from "@/preload/api/shortcuts";
 import { authApi } from "@/preload/api/auth";
@@ -21,6 +27,12 @@ import { lifecycleApi } from "@/preload/api/lifecycle";
 import { shieldsApi } from "@/preload/api/shields";
 
 const electronAPI = {
+  system: systemApi,
+  folders: foldersApi,
+  networkProxy: networkProxyApi,
+  confirmation: confirmationApi,
+  setup: setupApi,
+  updates: updateApi,
   rpc: rpcApi,
   lifecycle: lifecycleApi,
   shields: shieldsApi,

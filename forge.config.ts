@@ -1,4 +1,10 @@
 import type { ForgeConfig } from "@electron-forge/shared-types";
+import { fileURLToPath } from "node:url";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { loadDevelopmentEnvironment } from "./utils/development-environment";
+import { getMacReleaseSigning } from "./utils/release-environment";
+import { trackDevelopmentProcess } from "./main/services/forge-lifecycle";
 import { MakerSquirrel } from "@electron-forge/maker-squirrel";
 import { MakerZIP } from "@electron-forge/maker-zip";
 import { MakerDeb } from "@electron-forge/maker-deb";
@@ -10,14 +16,18 @@ import { FuseV1Options, FuseVersion } from "@electron/fuses";
 
 const appIcon =
   process.platform === "darwin"
-    ? "assets/favicon.icns"
+    ? "public/favicon.icns"
     : process.platform === "win32"
-      ? "assets/favicon.ico"
-      : "assets/favicon.png";
+      ? "public/favicon.ico"
+      : "public/favicon.png";
 
 const config: ForgeConfig = {
   hooks: {
+    postStart: async (_config, appProcess) => {
+      trackDevelopmentProcess(appProcess);
+    },
     preStart: async () => {
+      loadDevelopmentEnvironment(fileURLToPath(new URL(".", import.meta.url)));
       // Set before Electron is spawned; AppKit logging initializes before main.ts.
       if (process.platform === "darwin") {
         process.env.OS_ACTIVITY_MODE ??= "disable";
@@ -25,9 +35,16 @@ const config: ForgeConfig = {
     },
   },
   packagerConfig: {
+    ...getMacReleaseSigning(),
+    // Packager clears its temp root; never share it with another Forge process.
+    tmpdir: join(tmpdir(), `gorth-browser-forge-${process.pid}`),
     appBundleId: "com.gorth.browser",
     appCategoryType: "public.app-category.productivity",
     asar: true,
+    protocols: [
+      { name: "Gorth authentication", schemes: ["com.gorth.browser"] },
+      { name: "Web browsing", schemes: ["http", "https"] },
+    ],
     executableName: "Gorth Browser",
     icon: appIcon,
     ignore: (filePath) => {
@@ -37,8 +54,8 @@ const config: ForgeConfig = {
 
       return !(
         filePath.startsWith("/.vite") ||
-        filePath === "/assets" ||
-        filePath.startsWith("/assets/") ||
+        filePath === "/public" ||
+        filePath.startsWith("/public/") ||
         filePath === "/node_modules" ||
         filePath.startsWith("/node_modules/")
       );
@@ -46,10 +63,24 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {},
   makers: [
-    new MakerSquirrel({}),
+    new MakerSquirrel((arch) => ({
+      name: "gorth_browser",
+      setupExe: `gorth-browser-win32-${arch}-setup.exe`,
+      setupMsi: `gorth-browser-win32-${arch}-setup.msi`,
+      noMsi: false,
+    })),
+    {
+      name: "@electron-forge/maker-dmg",
+      platforms: ["darwin"],
+      config: { format: "ULFO" },
+    },
     new MakerZIP({}, ["darwin"]),
-    new MakerRpm({}),
-    new MakerDeb({}),
+    new MakerRpm({
+      options: { name: "gorth-browser", productName: "Gorth Browser" },
+    }),
+    new MakerDeb({
+      options: { name: "gorth-browser", productName: "Gorth Browser" },
+    }),
   ],
   plugins: [
     new AutoUnpackNativesPlugin({}),

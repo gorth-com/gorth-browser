@@ -1,5 +1,5 @@
-import { Bookmark } from "lucide-react";
-import type { NavMainItem } from "@/components/dashboard/interface";
+import { Bookmark } from "@gorth-io/primitive/cores/lucide";
+import type { NavMainItem } from "@gorth-io/primitive/utils/interface";
 export interface BrowserBookmark {
   id: string;
   title: string;

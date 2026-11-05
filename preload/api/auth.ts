@@ -3,6 +3,17 @@ import type { UserProfileCache } from "@/lib/server/interface";
 import type { AuthViewBounds, AuthViewState } from "@/lib/auth/view-types";
 import type { AuthAction, AuthResult, AuthSnapshot } from "@/lib/auth/types";
 export const authApi = {
+  onNavigationRequested: (callback: (url: string) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, url: string) =>
+      callback(url);
+    ipcRenderer.on("auth:navigation-requested", listener);
+    ipcRenderer.send("auth:navigation-ready");
+    return () => {
+      ipcRenderer.removeListener("auth:navigation-requested", listener);
+    };
+  },
+  setLoginBrowser: (browser: "default" | "gorth"): Promise<AuthResult> =>
+    ipcRenderer.invoke("auth:login-browser", browser),
   attachTab: (id: string): Promise<boolean> =>
     ipcRenderer.invoke("auth:view-tab", id),
   profile: async (): Promise<UserProfileCache | null> => {

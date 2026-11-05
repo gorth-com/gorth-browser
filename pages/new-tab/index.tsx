@@ -1,47 +1,26 @@
+import { quickLinks } from "@/utils/constant";
+import { useBrowserSetup } from "@/hooks/use-browser-setup";
 import {
   ArrowRight,
-  GitFork,
   Globe2,
-  Search,
   ShieldCheck,
   Zap,
-} from "lucide-react";
+} from "@gorth-io/primitive/cores/lucide";
 
 import { ThemeToggle } from "@/components/element/theme-toggle";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@gorth-io/primitive/custom/badge";
+import { Button } from "@gorth-io/primitive/custom/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+} from "@gorth-io/primitive/default/card";
+import { Separator } from "@gorth-io/primitive/default/separator";
 import type { Theme } from "@/lib/theme";
 import { Wrapper } from "@/layouts/wrapper";
 import { SearchForm } from "@/components/form/search-form";
-
-const quickLinks = [
-  {
-    label: "Google",
-    description: "Search the web",
-    url: "https://www.google.com",
-    icon: Search,
-  },
-  {
-    label: "GitHub",
-    description: "Explore source code",
-    url: "https://github.com",
-    icon: GitFork,
-  },
-  {
-    label: "Wikipedia",
-    description: "Look up knowledge",
-    url: "https://www.wikipedia.org",
-    icon: Globe2,
-  },
-];
 
 interface NewTabPageProps {
   onNavigate: (value: string) => void;
@@ -50,7 +29,9 @@ interface NewTabPageProps {
 }
 
 function NewTabPage({ onNavigate, onThemeChange, theme }: NewTabPageProps) {
-
+  const setup = useBrowserSetup();
+  if (!setup.data || setup.data.newTab === "blank")
+    return <div className="min-h-full bg-background" aria-label="New tab" />;
   return (
     <div className="relative min-h-full">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_color-mix(in_oklch,var(--primary)_10%,transparent),_transparent_38%)]" />

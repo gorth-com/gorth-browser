@@ -1,4 +1,5 @@
-import { ShieldCheck } from "lucide-react";
+import { ErrorFeedback } from "@/components/element/error-feedback";
+import { ShieldCheck } from "@gorth-io/primitive/cores/lucide";
 import { useEffect, useState } from "react";
 import { PageShell } from "@/pages/shared";
 import {
@@ -7,12 +8,12 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { formatDateTime } from "@/lib/utils/formatter";
+} from "@gorth-io/primitive/default/card";
+import { Button } from "@gorth-io/primitive/custom/button";
+import { Input } from "@gorth-io/primitive/default/input";
+import { Textarea } from "@gorth-io/primitive/default/textarea";
+import { Switch } from "@gorth-io/primitive/default/switch";
+import { formatDateTime } from "@/utils/formatter";
 import {
   normalizeSite,
   type ShieldStatus,
@@ -54,11 +55,7 @@ export function SettingsSectionPage() {
     }
   };
   return (
-    <PageShell
-      icon={ShieldCheck}
-      title="Shields"
-      description="Configure protection from trackers and unwanted content."
-    >
+    <PageShell icon={ShieldCheck} title="Shields">
       <Card>
         <CardHeader>
           <CardTitle>Shields</CardTitle>
@@ -69,9 +66,7 @@ export function SettingsSectionPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           {(error || status?.error) && (
-            <p role="alert" className="text-sm text-destructive">
-              {error || status?.error}
-            </p>
+            <ErrorFeedback message={error || status?.error} />
           )}
           <div className="flex items-center justify-between gap-4">
             <div>

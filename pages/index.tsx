@@ -1,9 +1,7 @@
 import type { SpecialPageProps } from "./shared";
 import { createContext, useContext, useState } from "react";
-import { RouterProvider } from "@tanstack/react-router";
+import { RouterProvider } from "@gorth-io/primitive/cores/tanstack/router";
 import { createInternalRouter } from "@/lib/browser/router";
-import { ShortcutsPage } from "./shortcuts";
-import { Wrapper } from "@/layouts/wrapper";
 import { SettingsPage } from "./settings";
 import { BookmarksPage } from "./bookmarks";
 import { HistoryPage } from "./history";
@@ -24,10 +22,8 @@ const pageRenderers = {
   archive: (props: SpecialPageProps) => (
     <ArchivePage onRestore={props.onRestoreArchivedTab} />
   ),
-  shortcuts: () => (
-    <Wrapper>
-      <ShortcutsPage />
-    </Wrapper>
+  shortcuts: (props: SpecialPageProps) => (
+    <SettingsPage {...props} page="settings/shortcuts" />
   ),
   help: (props: SpecialPageProps) => (
     <HelpPage onOpenInternal={props.onOpenInternal} />

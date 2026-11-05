@@ -1,18 +1,14 @@
-import { Languages } from "lucide-react";
+import { Languages } from "@gorth-io/primitive/cores/lucide";
 import { PageShell } from "@/pages/shared";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
+} from "@gorth-io/primitive/default/card";
 export function SettingsSectionPage() {
   return (
-    <PageShell
-      icon={Languages}
-      title="Languages"
-      description="Choose language and translation preferences."
-    >
+    <PageShell icon={Languages} title="Languages">
       <Card>
         <CardHeader>
           <CardTitle>Languages</CardTitle>

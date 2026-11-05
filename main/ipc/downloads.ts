@@ -1,5 +1,5 @@
 import { ipcMain, type WebContents } from "electron";
-import { z } from "zod";
+import { z } from "@gorth-io/structure/cores/zod";
 import { getWindowFromSender } from "@/main/windows/capital";
 import {
   getDownloads,

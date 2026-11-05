@@ -1,18 +1,14 @@
-import { Sparkles } from "lucide-react";
+import { Sparkles } from "@gorth-io/primitive/cores/lucide";
 import { PageShell } from "@/pages/shared";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
+} from "@gorth-io/primitive/default/card";
 export function SettingsSectionPage() {
   return (
-    <PageShell
-      icon={Sparkles}
-      title="Leo"
-      description="Configure your browsing assistant."
-    >
+    <PageShell icon={Sparkles} title="Leo">
       <Card>
         <CardHeader>
           <CardTitle>Leo</CardTitle>

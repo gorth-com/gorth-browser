@@ -8,7 +8,7 @@ const engine = await ElectronBlocker.fromPrebuiltFull(async (url) => {
   return response;
 });
 await writeFile(
-  new URL("../assets/shields-engine.bin", import.meta.url),
+  new URL("../public/shields-engine.bin", import.meta.url),
   engine.serialize(),
 );
 console.log("Bundled Shields engine generated.");

@@ -1,3 +1,4 @@
+import { defaultBrowserPreferences } from "@/utils/constant";
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -14,10 +15,7 @@ import {
   loadTabGroups,
   addRecentlyClosedTab,
 } from "@/services/browser-database";
-import {
-  defaultBrowserPreferences,
-  type PersistedTab,
-} from "@/lib/browser/persistence";
+import { type PersistedTab } from "@/lib/browser/persistence";
 import {
   updateWebviewBounds,
   type WebviewLayoutState,
@@ -68,7 +66,7 @@ test("Tab groups: legacy migration, immediate CRUD, session save, restart and cl
     });
     const check = new Database(filename, { readonly: true });
     assert.equal(
-      check.prepare("SELECT count(*) AS n FROM tab_groups").get()?.n,
+      check.prepare("SELECT count(*) AS n FROM tab_group").get()?.n,
       3,
     );
     check.close();
@@ -104,7 +102,7 @@ test("Tab groups: legacy migration, immediate CRUD, session save, restart and cl
     assert.equal(
       deleted
         .prepare(
-          "SELECT count(*) AS n FROM tab_group_members WHERE group_id = 'normal'",
+          "SELECT count(*) AS n FROM tab_group_member WHERE group_id = 'normal'",
         )
         .get()?.n,
       0,

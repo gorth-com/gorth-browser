@@ -1,9 +1,5 @@
 import { destroyWebview } from "@/main/windows/webview";
-import {
-  registerAuthTabHost,
-  isAuthTab,
-  cancelAuthTab,
-} from "@/main/services/auth-view";
+import { isAuthTab, cancelAuthTab } from "@/main/services/auth-view";
 import { ipcMain } from "electron";
 import { parseInternalPage } from "@/lib/browser/internal-pages";
 import { wakeTab } from "@/main/services/tab-lifecycle";
@@ -23,20 +19,6 @@ import {
 } from "@/main/windows/capital";
 
 export function registerBrowserIpc() {
-  registerAuthTabHost((window, id, view) => {
-    const state = getBrowserState(window);
-    state.internalPages.delete(id);
-    state.views.set(id, { view, transientAuth: true });
-    state.activeTabId = id;
-    state.splitTabId = null;
-    if (state.webFullScreenTabId)
-      setWebFullScreen(window, state.webFullScreenTabId, false);
-    updateViewBounds(window);
-    return () => {
-      state.views.delete(id);
-      if (!window.isDestroyed()) showInternalPage(window, id, "auth");
-    };
-  });
   ipcMain.on("tabs:set-layout", (event, layout: BrowserLayout) => {
     const window = getWindowFromSender(event.sender);
 
@@ -46,6 +28,9 @@ export function registerBrowserIpc() {
 
     const state = getBrowserState(window);
     state.layout = {
+      spaceBarWidth: Number.isFinite(layout.spaceBarWidth)
+        ? Math.max(0, Math.min(56, Math.round(layout.spaceBarWidth ?? 0)))
+        : 0,
       verticalTabsWidth: Number.isFinite(layout.verticalTabsWidth)
         ? Math.max(0, Math.round(layout.verticalTabsWidth))
         : 0,

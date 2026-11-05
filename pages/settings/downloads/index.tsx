@@ -1,5 +1,6 @@
+import { ErrorFeedback } from "@/components/element/error-feedback";
 import { useEffect, useState } from "react";
-import { Download, FolderOpen } from "lucide-react";
+import { Download, FolderOpen } from "@gorth-io/primitive/cores/lucide";
 import { PageShell } from "@/pages/shared";
 import {
   Card,
@@ -7,9 +8,9 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+} from "@gorth-io/primitive/default/card";
+import { Button } from "@gorth-io/primitive/custom/button";
+import { Switch } from "@gorth-io/primitive/default/switch";
 import type { DownloadPreferences } from "@/lib/browser/downloads";
 export function SettingsSectionPage() {
   const [preferences, setPreferences] = useState<DownloadPreferences | null>(
@@ -43,11 +44,7 @@ export function SettingsSectionPage() {
     }
   };
   return (
-    <PageShell
-      icon={Download}
-      title="Downloads"
-      description="Configure file download preferences."
-    >
+    <PageShell icon={Download} title="Downloads">
       <Card>
         <CardHeader>
           <CardTitle>Download location</CardTitle>
@@ -57,11 +54,7 @@ export function SettingsSectionPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {error && (
-            <p role="alert" className="text-sm text-destructive">
-              {error}
-            </p>
-          )}
+          {error && <ErrorFeedback message={error} />}
           <div className="flex items-center gap-2">
             <p className="min-w-0 flex-1 break-all text-sm text-muted-foreground">
               {preferences?.directory ?? "Loading…"}

@@ -6,7 +6,7 @@ import {
   formatFileSize,
   formatInitials,
   formatNumber,
-} from "@/lib/utils/formatter";
+} from "@/utils/formatter";
 
 test("file sizes retain adaptive units, precision and invalid-value handling", () => {
   for (const value of [NaN, Infinity, -Infinity, -1, 0])
@@ -54,7 +54,7 @@ import {
   formatDownloadBytes,
   formatRemainingTime,
   formatTransferRate,
-} from "@/lib/utils/formatter";
+} from "@/utils/formatter";
 
 test("download sizes preserve localized units and handle sub-byte rates", () => {
   for (const value of [NaN, Infinity, -1, 0])

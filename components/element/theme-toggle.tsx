@@ -1,4 +1,5 @@
-import { Monitor, Moon, Sun } from "lucide-react";
+import { themeLabels } from "@/utils/constant";
+import { Monitor, Moon, Sun } from "@gorth-io/primitive/cores/lucide";
 
 import {
   PopoverMenu,
@@ -7,12 +8,6 @@ import {
   PopoverMenuSeparator,
 } from "@/components/element/popover-menu";
 import type { Theme } from "@/lib/theme";
-
-const themeLabels: Record<Theme, string> = {
-  dark: "Dark",
-  light: "Light",
-  system: "System",
-};
 
 function ThemeToggle({
   theme,

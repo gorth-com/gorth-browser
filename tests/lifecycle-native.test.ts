@@ -1,3 +1,4 @@
+import { defaultShieldPreferences } from "@/utils/constant";
 import assert from "node:assert/strict";
 import { app, BrowserWindow } from "electron";
 import { createServer } from "node:http";
@@ -22,7 +23,6 @@ import {
   stopContentBlocker,
   getShieldStatus,
 } from "@/main/services/content-blocker";
-import { defaultShieldPreferences } from "@/lib/browser/shields";
 
 const directory = mkdtempSync(path.join(tmpdir(), "gorth-lifecycle-native-"));
 app.setPath("userData", directory);
@@ -61,7 +61,7 @@ void (async () => {
       customFilters: "*/gorth-test-ad.js$script\n127.0.0.1##.gorth-test-ad",
     });
     copyFileSync(
-      path.join(process.cwd(), "assets", "shields-engine.bin"),
+      path.join(process.cwd(), "public", "shields-engine.bin"),
       path.join(directory, "shields-engine.bin"),
     );
     await initializeContentBlocker();

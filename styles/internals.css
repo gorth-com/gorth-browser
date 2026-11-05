@@ -1,0 +1,12 @@
+@theme inline {
+  --font-sans: "Inter Variable", sans-serif;
+}
+/* Energy Saver only changes browser chrome, never website/media styling. */
+html[data-energy-saver] *,
+html[data-energy-saver] *::before,
+html[data-energy-saver] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}

@@ -1,18 +1,14 @@
-import { LockKeyhole } from "lucide-react";
+import { LockKeyhole } from "@gorth-io/primitive/cores/lucide";
 import { PageShell } from "@/pages/shared";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
+} from "@gorth-io/primitive/default/card";
 export function SettingsSectionPage() {
   return (
-    <PageShell
-      icon={LockKeyhole}
-      title="Privacy and security"
-      description="Manage privacy and browsing data."
-    >
+    <PageShell icon={LockKeyhole} title="Privacy and security">
       <Card>
         <CardHeader>
           <CardTitle>Privacy and security</CardTitle>

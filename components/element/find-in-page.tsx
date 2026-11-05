@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { ChevronDown, ChevronUp, X } from "@gorth-io/primitive/cores/lucide";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@gorth-io/primitive/custom/button";
+import { Input } from "@gorth-io/primitive/default/input";
 
 interface FindInPageProps {
   tabId: string;
@@ -70,7 +70,7 @@ function FindInPage({ tabId, onClose }: FindInPageProps) {
   };
 
   return (
-    <div className="app-no-drag relative z-40 flex h-12 shrink-0 items-center justify-end gap-1 border-b bg-background p-1.5">
+    <div className="[-webkit-app-region:no-drag] relative z-40 flex h-12 shrink-0 items-center justify-end gap-1 border-b bg-background p-1.5">
       <div className="flex h-9 w-[360px] items-center gap-1 rounded-md border bg-background px-1 shadow-sm">
         <Input
           aria-label="Find in page"

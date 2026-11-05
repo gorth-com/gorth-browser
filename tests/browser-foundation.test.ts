@@ -1,3 +1,4 @@
+import { defaultBrowserPreferences } from "@/utils/constant";
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -20,10 +21,7 @@ import {
   listArchivedTabs,
   restoreArchivedTab,
 } from "@/services/browser-database";
-import {
-  defaultBrowserPreferences,
-  type PersistedTab,
-} from "@/lib/browser/persistence";
+import { type PersistedTab } from "@/lib/browser/persistence";
 import { shouldSleepTab } from "@/lib/browser/lifecycle";
 import { isSiteExcluded, normalizeSite } from "@/lib/browser/shields";
 import {

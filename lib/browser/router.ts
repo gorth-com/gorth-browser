@@ -1,14 +1,12 @@
+import { internalPageDefinitions } from "@/utils/constant";
 import {
   createMemoryHistory,
   createRootRoute,
   createRoute,
   createRouter,
   type RouteComponent,
-} from "@tanstack/react-router";
-import {
-  internalPageDefinitions,
-  type BrowserInternalPage,
-} from "./internal-pages";
+} from "@gorth-io/primitive/cores/tanstack/router";
+import { type BrowserInternalPage } from "./internal-pages";
 
 export function createInternalRouter(
   page: Exclude<BrowserInternalPage, "new-tab">,

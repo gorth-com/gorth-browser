@@ -1,45 +1,91 @@
-import assert from "node:assert/strict";
-import { test } from "node:test";
-import { readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { calls, directory, frame, handlers, sender } from "./electron-auth-mock";
-import { registerAuthIpc } from "../lib/auth/service";
+import { expect, it, vi } from "vitest";
+it("stores browser choice through trusted IPC without unlocking Keychain", async () => {
+  registerAuthIpc();
+  calls.available = false;
+  const event = { sender, senderFrame: frame };
+  const before = calls.decrypt;
+  const choose = handlers.get("auth:login-browser")!;
+  const selected = (await choose(
+    event,
+    "gorth",
+  )) as import("@/lib/auth/types").AuthResult;
+  expect(selected.snapshot.loginBrowser).toBe("gorth");
+  expect(
+    ((await choose(event, "invalid")) as import("@/lib/auth/types").AuthResult)
+      .error,
+  ).toBeTruthy();
+  await expect(async () =>
+    choose({ sender: {}, senderFrame: frame }, "default"),
+  ).rejects.toThrow("Untrusted");
+  expect(calls.decrypt).toBe(before);
+  expect(
+    ((await choose(event, "default")) as import("@/lib/auth/types").AuthResult)
+      .snapshot.loginBrowser,
+  ).toBe("default");
+});
+import { calls, frame, handlers, sender } from "./electron-auth-mock";
+import { registerAuthIpc } from "@/lib/auth/service";
+vi.mock("@/main/rpc/sender", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/main/rpc/sender")>()),
+  getRpcRendererUrl: () => "http://localhost:5501/public/index.html",
+}));
+vi.mock("electron", () => import("./electron-auth-mock"));
+vi.mock("@/services/user-profile", () => ({ upsertUserProfile: vi.fn() }));
+const native = vi.hoisted(() => ({
+  user: null as null | {
+    id: string;
+    name: string;
+    expiresAt: number;
+    needsLogin: boolean;
+    verifiedAt: number;
+    canRefresh: boolean;
+  },
+  signOut: vi.fn(),
+}));
+vi.mock("@/lib/auth/gorth", () => ({
+  gorthSnapshot: () => ({
+    user: native.user,
+    locked: !native.user,
+    configured: true,
+  }),
+  getGorthUserId: () => native.user?.id ?? null,
+  onGorthChanged: () => () => {},
+  restoreGorthSession: async () => {
+    native.user = {
+      id: "sso-sub",
+      name: "Fixture",
+      expiresAt: Date.now() + 120000,
+      verifiedAt: Date.now(),
+      canRefresh: true,
+      needsLogin: false,
+    };
+  },
+  signOutGorth: async () => {
+    native.user = null;
+    native.signOut();
+  },
+  loginGorth: vi.fn(),
+}));
 
-test("Startup does not decrypt; denied/corrupt vault retries safely; auth IPC hides tokens and rejects untrusted callers", async () => {
-  const filename = path.join(directory, "sso.v1.enc");
-  const identity = {
-    id: "test-user", name: "Test User", email: "user@example.test",
-    tokens: { accessToken: "SECRET-ACCESS", refreshToken: "SECRET-REFRESH", expiresAt: Date.now() + 60_000, binding: "other-config" },
-  };
-  const encoded = "TEST-ONLY:" + JSON.stringify({ version: 1, session: identity });
-  await writeFile(filename, encoded);
+it("uses native public session snapshots, rejects foreign IPC and never exposes credentials", async () => {
+  calls.available = true;
   registerAuthIpc();
   const event = { sender, senderFrame: frame };
-  const snapshot = () => handlers.get("auth:snapshot")!(event) as import('../lib/auth/types').AuthResult;
-  const command = async (action: string) => await handlers.get("auth:command")!(event, action) as import('../lib/auth/types').AuthResult;
-  assert.equal((await snapshot()).snapshot.locked, true);
-  assert.equal(calls.decrypt, 0);
-  const denied = await command("unlock");
-  assert(denied.error);
-  assert.equal(await readFile(filename, "utf8"), encoded);
-  calls.available = true;
-  await writeFile(filename, 'TEST-ONLY:{"version":1,"accounts":[],"session":42}');
-  assert((await command("unlock")).error);
-  await writeFile(filename, encoded);
-  const unlocked = await command("unlock");
-  assert(!unlocked.error);
-  assert.equal(unlocked.snapshot.user?.id, "test-user");
-  assert.equal(unlocked.snapshot.locked, false);
-  assert(!JSON.stringify(unlocked).includes("SECRET-"));
-  assert(!JSON.stringify(calls.snapshots).includes("SECRET-"));
-  await assert.rejects(async () => handlers.get("auth:command")!({ sender: {}, senderFrame: frame }, "unlock"));
-  await assert.rejects(async () => handlers.get("auth:snapshot")!({ sender, senderFrame: {} }));
-  assert((await command("ely.login")).error);
-  const before = calls.decrypt;
-  await snapshot();
-  assert.equal(calls.decrypt, before);
-  // Missing SSO configuration simulates remote revocation failure. Local logout must still succeed.
-  const loggedOut = await command("logout");
-  assert.equal(loggedOut.snapshot.user, null);
-  assert(!(await readFile(filename, "utf8")).includes("SECRET-"));
+  const command = async (action: string) =>
+    (await handlers.get("auth:command")!(
+      event,
+      action,
+    )) as import("@/lib/auth/types").AuthResult;
+  expect((await command("unlock")).snapshot.user?.id).toBe("sso-sub");
+  expect(JSON.stringify(calls.snapshots)).not.toMatch(
+    /accessToken|refreshToken|session_token/,
+  );
+  await expect(async () =>
+    handlers.get("auth:command")!({ sender: {}, senderFrame: frame }, "unlock"),
+  ).rejects.toThrow("Untrusted");
+  await expect(async () =>
+    handlers.get("auth:snapshot")!({ sender, senderFrame: {} }),
+  ).rejects.toThrow("Untrusted");
+  expect((await command("logout")).snapshot.user).toBeNull();
+  expect(native.signOut).toHaveBeenCalledTimes(1);
 });

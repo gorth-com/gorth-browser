@@ -1,3 +1,4 @@
+import { defaultShieldPreferences } from "@/utils/constant";
 import {
   ElectronBlocker,
   fromElectronDetails,
@@ -12,10 +13,12 @@ import {
 } from "electron";
 import { readFile, writeFile, rename } from "node:fs/promises";
 import path from "node:path";
-import { z } from "zod";
-import { readBrowserSetting, writeBrowserSetting } from "@/services/browser-database";
+import { z } from "@gorth-io/structure/cores/zod";
 import {
-  defaultShieldPreferences,
+  readBrowserSetting,
+  writeBrowserSetting,
+} from "@/services/browser-database";
+import {
   isSiteExcluded,
   normalizeSite,
   type ShieldPreferences,
@@ -238,7 +241,7 @@ export function updateShieldLists() {
   updatePromise = (async () => {
     try {
       const next = await ElectronBlocker.fromPrebuiltFull(async (url) => {
-        const response = await fetch(url, {
+        const response = await desktopFetch(url, {
           signal: AbortSignal.any([
             AbortSignal.timeout(20_000),
             updateAbort.signal,
@@ -283,7 +286,7 @@ export async function initializeContentBlocker() {
   );
   for (const filename of [
     cachePath(),
-    path.join(app.getAppPath(), "assets", "shields-engine.bin"),
+    path.join(app.getAppPath(), "public", "shields-engine.bin"),
   ]) {
     try {
       attachEngine(ElectronBlocker.deserialize(await readFile(filename)));
@@ -347,3 +350,4 @@ export function stopContentBlocker() {
     engine.disableBlockingInSession(session.defaultSession);
   websiteContents.clear();
 }
+import { desktopFetch } from "@/lib/http/transport";

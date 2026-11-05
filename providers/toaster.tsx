@@ -19,7 +19,7 @@ import {
   ToastViewport,
   toast,
   useToastManager,
-} from "@/components/custom/toast";
+} from "@gorth-io/primitive/custom/toast";
 
 export type ToastPosition =
   "top-left" | "top-right" | "bottom-left" | "bottom-right";
@@ -166,9 +166,10 @@ function ToastSurface({ position }: { position: ToastPosition }) {
               right: "auto",
               height: "auto",
               transform: "none",
+              transition: "transform 200ms cubic-bezier(0.22,1,0.36,1), opacity 200ms, height 200ms",
             }}
           >
-            <ToastContent style={{ opacity: 1 }}>
+            <ToastContent className="duration-200" style={{ opacity: 1 }}>
               <div className="min-w-0 flex-1">
                 <ToastTitle />
                 <ToastDescription />

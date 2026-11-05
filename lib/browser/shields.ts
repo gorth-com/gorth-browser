@@ -14,13 +14,6 @@ export interface ShieldStatus {
   error: string | null;
 }
 
-export const defaultShieldPreferences: ShieldPreferences = {
-  enabled: true,
-  automaticUpdates: true,
-  disabledSites: [],
-  customFilters: "",
-};
-
 export function normalizeSite(value: string) {
   const url = new URL(value.includes("://") ? value : `https://${value}`);
   if (

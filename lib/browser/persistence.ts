@@ -31,6 +31,10 @@ interface PersistedHistoryItem {
 }
 
 interface BrowserPreferences {
+  sidebarCollapsible: boolean;
+  sidebarCollapseMode: "icon" | "none";
+  tabLayout: "separate" | "compact";
+  enableWorkspace: boolean;
   sleepAfterMinutes: number;
   archiveAfterDays: number;
   flags: Record<string, boolean>;
@@ -68,18 +72,6 @@ interface PersistedWindowState {
   y: number | null;
 }
 
-const defaultBrowserPreferences: BrowserPreferences = {
-  sleepAfterMinutes: 15,
-  archiveAfterDays: 0,
-  flags: { memorySaver: true, smoothScrolling: true },
-  sidebarSide: "left",
-  showTitlebarLogo: true,
-  theme: "system",
-  verticalCollapsed: false,
-  verticalTabs: false,
-};
-
-export { defaultBrowserPreferences };
 export type {
   BrowserPreferences,
   BrowserSnapshot,

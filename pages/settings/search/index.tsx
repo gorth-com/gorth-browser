@@ -1,18 +1,14 @@
-import { Search } from "lucide-react";
+import { Search } from "@gorth-io/primitive/cores/lucide";
 import { PageShell } from "@/pages/shared";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
+} from "@gorth-io/primitive/default/card";
 export function SettingsSectionPage() {
   return (
-    <PageShell
-      icon={Search}
-      title="Search engine"
-      description="Choose how searches are handled."
-    >
+    <PageShell icon={Search} title="Search engine">
       <Card>
         <CardHeader>
           <CardTitle>Default search engine</CardTitle>

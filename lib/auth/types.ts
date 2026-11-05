@@ -1,19 +1,5 @@
-export interface Tokens {
-  accessToken: string;
-  refreshToken?: string;
-  expiresAt: number;
-  binding: string;
-}
-export interface AuthSession {
-  id: string;
-  name: string;
-  email?: string;
-  username?: string;
-  image?: string;
-  emailVerified?: boolean;
-  tokens: Tokens;
-}
 export interface AuthSnapshot {
+  loginBrowser?: "default" | "gorth";
   user: {
     id: string;
     name: string;
@@ -22,6 +8,7 @@ export interface AuthSnapshot {
     image?: string;
     emailVerified?: boolean;
     expiresAt: number;
+    verifiedAt?: number;
     canRefresh?: boolean;
     needsLogin: boolean;
   } | null;

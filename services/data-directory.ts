@@ -8,7 +8,7 @@ import {
   renameSync,
 } from "node:fs";
 import path from "node:path";
-import { getDataDirectory } from "@/lib/utils/data-directory";
+import { getDataDirectory } from "@/utils/data-directory";
 
 export function configureDataDirectory() {
   const previous = app.getPath("userData");

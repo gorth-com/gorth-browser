@@ -35,14 +35,14 @@ import {
   X,
   Moon,
   Archive,
-} from "lucide-react";
+} from "@gorth-io/primitive/cores/lucide";
 
 import {
   PopoverMenuItem,
   PopoverMenuLabel,
   PopoverMenuSeparator,
 } from "@/components/element/popover-menu";
-import { Button } from "@/components/ui/button";
+import { Button } from "@gorth-io/primitive/custom/button";
 import { TabIcon } from "@/components/element/tab-icon";
 import type {
   AddressBarContextMenuCommand,

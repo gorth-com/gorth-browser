@@ -1,4 +1,8 @@
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { ShortcutsPage } from "@/pages/settings/shortcuts";
+import { FoldersPage } from "./folders";
+import { Wrapper } from "@/layouts/wrapper";
+import { SidebarProvider } from "@gorth-io/primitive/custom/sidebar";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Dashboard } from "@/layouts/dashboard";
 import type { SpecialPageProps } from "@/pages/shared";
 import { SettingsPage as AppearancePage } from "./appearance";
@@ -20,7 +24,10 @@ import { SettingsSectionPage as Section13 } from "./system";
 import { SettingsSectionPage as Section14 } from "./reset";
 
 import { ProfilePage } from "./profile";
+import { ProxyPage } from "./proxy";
 const sections = {
+  "settings/folders": FoldersPage,
+  "settings/proxy": ProxyPage,
   "settings/profile": ProfilePage,
   "settings/get-started": Section0,
   "settings/content": Section1,
@@ -39,17 +46,24 @@ const sections = {
   "settings/reset": Section14,
 };
 export function SettingsPage(props: SpecialPageProps) {
+  const [open, setOpen] = useState(!props.sidebarCollapsible);
+  useEffect(() => {
+    setOpen(!props.sidebarCollapsible);
+  }, [props.sidebarCollapsible]);
   const current =
     props.page === "settings" ? "settings/get-started" : props.page;
   const Section = sections[current as keyof typeof sections];
 
   return (
     <SidebarProvider
-      open
-      onOpenChange={() => {}}
-      className="h-full min-h-0 items-stretch overflow-hidden"
+      open={!props.sidebarCollapsible || open}
+      onOpenChange={setOpen}
+      style={{ "--sidebar-width-icon": "3.5rem" } as CSSProperties}
+      className="relative h-full min-h-0 items-stretch overflow-hidden"
     >
       <Dashboard
+        collapsible={props.sidebarCollapsible}
+        collapseMode={props.sidebarCollapseMode}
         variant="settings"
         page={current}
         onOpenInternal={props.onOpenInternal}
@@ -58,7 +72,11 @@ export function SettingsPage(props: SpecialPageProps) {
         className="min-w-0 flex-1 overflow-y-auto"
         aria-label="Settings content"
       >
-        {current === "settings/appearance" ? (
+        {current === "settings/shortcuts" || current === "shortcuts" ? (
+          <Wrapper>
+            <ShortcutsPage />
+          </Wrapper>
+        ) : current === "settings/appearance" ? (
           <AppearancePage {...props} />
         ) : current === "settings/help" ? (
           <AboutPage onOpenInternal={props.onOpenInternal} />

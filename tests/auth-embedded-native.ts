@@ -1,169 +1,165 @@
 import assert from "node:assert/strict";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import path from "node:path";
-import { app, BrowserWindow, WebContentsView } from "electron";
-import { loginGorth } from "@/lib/auth/gorth";
+import { app, BrowserWindow, protocol, shell } from "electron";
+import { betterAuth } from "better-auth";
+import { electron } from "@better-auth/electron";
 import {
-  openAuthView,
-  clearAuthBrowserSession,
-  attachAuthTab,
-  registerAuthTabHost,
-} from "@/main/services/auth-view";
-import { updateWebviewBounds } from "@/main/windows/webview";
-
-app.setPath(
-  "userData",
-  mkdtempSync(path.join(tmpdir(), "gorth-browser-embedded-auth-")),
-);
-app
-  .whenReady()
-  .then(async () => {
-    const window = new BrowserWindow({
-      show: false,
-      width: 1280,
-      height: 720,
-      webPreferences: {
-        sandbox: true,
-        contextIsolation: true,
-        nodeIntegration: false,
-      },
-    });
-    try {
-      await window.loadURL(
-        "data:text/html," +
-          encodeURIComponent(
-            '<header style="height:56px;-webkit-app-region:drag">Browser titlebar</header><nav style="height:56px;-webkit-app-region:drag"><input aria-label="Address" style="-webkit-app-region:no-drag"></nav><main>Desktop test shell</main>',
-          ),
-      );
-      const records = new Map<string, { view: WebContentsView }>();
-      registerAuthTabHost((owner, id, view) => {
-        records.set(id, { view });
-        updateWebviewBounds(owner, {
-          activeTabId: id,
-          splitTabId: null,
-          webFullScreenTabId: null,
-          companionMode: "split",
-          internalTabIds: new Set(),
-          views: records,
-          layout: {
-            top: 112,
-            verticalTabsWidth: 0,
-            sidebarWidth: 0,
-            sidebarSide: "left",
-          },
-        });
-        return () => {
-          records.delete(id);
-        };
-      });
-      await clearAuthBrowserSession();
-      for (const mode of ["login", "register"] as const) {
-        const controller = new AbortController();
-        let authorization: URL | undefined;
-        const pending = loginGorth(
-          async (url, receive) => {
-            authorization = new URL(url);
-            await openAuthView(window, url, receive, controller, mode);
-            assert(attachAuthTab(window, "sso-test-tab"));
-          },
-          controller.signal,
-          mode,
-        );
-        // Consume cancellation immediately, without logging any token or code.
-        const completion = pending.then(
-          () => {
-            throw new Error(
-              "Unexpected authenticated user in anonymous smoke test",
-            );
-          },
-          (error: unknown) => error,
-        );
-        let view: WebContentsView | undefined;
-        let loaded = false;
-        const deadline = Date.now() + 45_000;
-        while (Date.now() < deadline) {
-          view = window.contentView.children.find(
-            (child) => child instanceof WebContentsView,
-          ) as WebContentsView | undefined;
-          if (view && !view.webContents.isLoading()) {
-            const pathname = new URL(view.webContents.getURL()).pathname;
-            if (
-              pathname ===
-              (mode === "register" ? "/auth/sign-up" : "/auth/sign-in")
-            ) {
-              loaded = await view.webContents.executeJavaScript(
-                'Boolean(document.querySelector("input[type=email]") && document.querySelector("input[type=password]"))',
-              );
-              if (loaded) break;
-            }
-          }
-          await new Promise((resolve) => setTimeout(resolve, 250));
-        }
-        assert(
-          loaded,
-          "Live SSO must display its login/sign-up form inside the existing window",
-        );
-        assert.equal(
-          authorization?.searchParams.get("prompt"),
-          mode === "register" ? "create" : null,
-        );
-        assert.equal(BrowserWindow.getAllWindows().length, 1);
-        assert(view);
-        assert.equal(
-          new URL(view.webContents.getURL()).searchParams.get("redirect"),
-          "gorth://auth",
-          "SSO form must retain the requested UI return destination",
-        );
-        assert.equal(
-          view.getBounds().y,
-          112,
-          "Native SSO tab must not cover titlebar/addressbar",
-        );
-        assert.equal(
-          authorization?.searchParams.get("redirect"),
-          "gorth://auth",
-        );
-        const chrome = await window.webContents.executeJavaScript(
-          '({ title: getComputedStyle(document.querySelector("header")).webkitAppRegion, address: Boolean(document.querySelector("nav input")) })',
-        );
-        assert.equal(chrome.title, "drag");
-        assert(chrome.address);
-        const preferences = view.webContents.getLastWebPreferences();
-        assert.equal(preferences.nodeIntegration, false);
-        assert.equal(preferences.contextIsolation, true);
-        assert.equal(preferences.sandbox, true);
-        assert.equal(
-          await view.webContents.executeJavaScript("typeof window.electronAPI"),
-          "undefined",
-        );
-        await view.webContents.executeJavaScript(
-          'window.open("https://untrusted.example", "_blank"); void 0;',
-        );
-        await new Promise((resolve) => setTimeout(resolve, 200));
-        assert.equal(
-          BrowserWindow.getAllWindows().length,
-          1,
-          "SSO must never create a popup window",
-        );
-        controller.abort();
-        assert((await completion) instanceof Error);
-        assert.equal(window.contentView.children.length, 0);
-        assert.equal(records.size, 0);
-        console.info(
-          "Embedded " +
-            mode +
-            ": live SSO form, sandbox, popup denial and cancellation passed.",
-        );
-      }
-    } finally {
-      window.destroy();
-    }
-  })
-  .then(() => app.exit(0))
-  .catch(() => {
-    console.error(
-      "Embedded SSO smoke test failed; no credentials or callback codes were logged.",
-    );
-    app.exit(1);
+  loginGorth,
+  receiveGorthDeepLink,
+  restoreGorthSession,
+  signOutGorth,
+  gorthSnapshot,
+  getGorthClient,
+  authScheme,
+  installGorthAuth,
+} from "@/lib/auth/gorth";
+app.setPath("userData", process.argv[2]);
+app.setPath("sessionData", process.argv[2]);
+// Match Browser startup's single privileged-scheme registration without
+// replacing the user's operating-system default protocol association.
+protocol.registerSchemesAsPrivileged([
+  { scheme: "gorth", privileges: { standard: true, secure: true } },
+  { scheme: authScheme, privileges: { secure: true } },
+]);
+let fixtureAuth: ReturnType<typeof betterAuth> | undefined;
+// Better Fetch captures fetch when setupMain creates the client. Install this
+// test-only transport before bootstrap, then attach the in-memory server.
+globalThis.fetch = async (input, init) => {
+  if (!fixtureAuth) throw new Error("The fixture auth server is not ready.");
+  return fixtureAuth.handler(
+    input instanceof Request ? input : new Request(input, init),
+  );
+};
+const registerDefaultProtocol = app.setAsDefaultProtocolClient;
+app.setAsDefaultProtocolClient = () => true;
+installGorthAuth({ registerScheme: false });
+app.setAsDefaultProtocolClient = registerDefaultProtocol;
+async function run() {
+  await app.whenReady();
+  const window = new BrowserWindow({
+    show: false,
+    width: 640,
+    height: 480,
+    webPreferences: {
+      sandbox: true,
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
   });
+  try {
+    await window.loadURL(
+      "data:text/html,<main>Isolated native auth fixture</main>",
+    );
+    const auth = betterAuth({
+      baseURL: "http://localhost:5503",
+      basePath: "/auth",
+      secret: "isolated-native-fixture-secret-at-least-32-bytes",
+      logger: { disabled: true },
+      rateLimit: { enabled: false },
+      trustedOrigins: ["http://localhost:5503", "com.gorth.browser:/"],
+      emailAndPassword: { enabled: true },
+      plugins: [
+        electron({
+          clientID: "gorth-browser",
+          cookiePrefix: "gorth-browser-website",
+        }),
+      ],
+      user: {
+        additionalFields: {
+          externalUserId: { type: "string", required: true },
+        },
+      },
+      advanced: { cookiePrefix: "gorth-browser-website" },
+    });
+    await auth.$context;
+    fixtureAuth = auth;
+    let authorization = "";
+    shell.openExternal = async (url) => {
+      authorization = url;
+    };
+    const controller = new AbortController();
+    const login = loginGorth(controller.signal);
+    let loginError: unknown;
+    async function consume() {
+      try {
+        await login;
+      } catch (error) {
+        loginError = error;
+      }
+    }
+    const completed = consume();
+    const deadline = Date.now() + 5000;
+    while (!authorization) {
+      assert(Date.now() < deadline, "SDK did not open its authorization page");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    const query = new URL(authorization).search;
+    const response = await auth.handler(
+      new Request("http://localhost:5503/auth/sign-up/email" + query, {
+        method: "POST",
+        headers: {
+          Origin: "http://localhost:5503",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: "Native Fixture",
+          email: "fixture@example.test",
+          password: "Test-only-password-123!",
+          externalUserId: "fixture-sso-sub",
+        }),
+      }),
+    );
+    assert.equal(response.status, 200);
+    const cookie = response.headers
+      .getSetCookie()
+      .find((value) =>
+        value.startsWith("gorth-browser-website.gorth-browser="),
+      );
+    assert(
+      cookie,
+      "The official server plugin did not issue the transfer cookie",
+    );
+    const token = cookie
+      .split(";")[0]
+      .slice("gorth-browser-website.gorth-browser=".length);
+    assert(
+      await receiveGorthDeepLink(
+        "com.gorth.browser://auth/callback#token=" + token,
+      ),
+    );
+    await completed;
+    assert.equal(loginError, undefined);
+    assert.equal(gorthSnapshot().user?.id, "fixture-sso-sub");
+    await restoreGorthSession();
+    assert.equal(gorthSnapshot().user?.id, "fixture-sso-sub");
+    const saved = getGorthClient().getCookie();
+    await signOutGorth();
+    assert.equal(gorthSnapshot().user, null);
+    const oldSession = await auth.handler(
+      new Request(
+        "http://localhost:5503/auth/get-session?disableCookieCache=true",
+        { headers: { Cookie: saved } },
+      ),
+    );
+    assert.equal(await oldSession.json(), null);
+    assert.equal(BrowserWindow.getAllWindows().length, 1);
+    assert.equal(
+      await window.webContents.executeJavaScript("typeof window.electronAPI"),
+      "undefined",
+    );
+    console.info(
+      "Native auth: official PKCE transfer, secure storage, restore, app-only logout and isolated renderer passed.",
+    );
+  } finally {
+    window.destroy();
+  }
+}
+async function main() {
+  try {
+    await run();
+    app.quit();
+  } catch (error) {
+    console.error("Native auth fixture failed:", error);
+    app.exit(1);
+  }
+}
+void main();

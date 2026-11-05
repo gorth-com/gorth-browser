@@ -1,18 +1,14 @@
-import { Accessibility } from "lucide-react";
+import { Accessibility } from "@gorth-io/primitive/cores/lucide";
 import { PageShell } from "@/pages/shared";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
+} from "@gorth-io/primitive/default/card";
 export function SettingsSectionPage() {
   return (
-    <PageShell
-      icon={Accessibility}
-      title="Accessibility"
-      description="Customize accessibility preferences."
-    >
+    <PageShell icon={Accessibility} title="Accessibility">
       <Card>
         <CardHeader>
           <CardTitle>Accessibility</CardTitle>

@@ -1,3 +1,4 @@
+import { defaultBrowserPreferences } from "@/utils/constant";
 import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
@@ -8,7 +9,6 @@ import { app, BrowserWindow, ipcMain } from "electron";
 import { desktopRouter, type DesktopContext } from "@/main/rpc/router";
 import { handleRpcRequest } from "@/main/rpc/transport";
 import { isRpcRendererUrl } from "@/main/rpc/sender";
-import { defaultBrowserPreferences } from "@/lib/browser/persistence";
 
 app.setPath(
   "userData",

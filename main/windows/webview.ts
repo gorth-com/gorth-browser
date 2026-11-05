@@ -1,6 +1,7 @@
 import { BrowserWindow, WebContentsView } from "electron";
 
 export interface WebviewLayout {
+  spaceBarWidth?: number;
   verticalTabsWidth: number;
   sidebarSide: "left" | "right";
   top: number;
@@ -63,12 +64,16 @@ export function updateWebviewBounds(
   const x = Math.min(
     windowWidth,
     state.layout.verticalTabsWidth +
+      (state.layout.spaceBarWidth ?? 0) +
       (state.layout.sidebarSide === "left" ? state.layout.sidebarWidth : 0),
   );
   const y = Math.min(state.layout.top, windowHeight);
   const width = Math.max(
     0,
-    windowWidth - state.layout.verticalTabsWidth - state.layout.sidebarWidth,
+    windowWidth -
+      state.layout.verticalTabsWidth -
+      state.layout.sidebarWidth -
+      (state.layout.spaceBarWidth ?? 0),
   );
   const height = Math.max(0, windowHeight - y);
 

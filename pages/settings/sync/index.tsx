@@ -1,18 +1,14 @@
-import { RefreshCw } from "lucide-react";
+import { RefreshCw } from "@gorth-io/primitive/cores/lucide";
 import { PageShell } from "@/pages/shared";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@/components/ui/card";
+} from "@gorth-io/primitive/default/card";
 export function SettingsSectionPage() {
   return (
-    <PageShell
-      icon={RefreshCw}
-      title="Sync"
-      description="Keep browsing data synchronized between devices."
-    >
+    <PageShell icon={RefreshCw} title="Sync">
       <Card>
         <CardHeader>
           <CardTitle>Sync</CardTitle>

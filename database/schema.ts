@@ -8,14 +8,14 @@ import {
 import { sql } from "drizzle-orm";
 import type { DownloadState } from "@/lib/browser/downloads";
 
-const profiles = sqliteTable("profiles", {
+const profileTable = sqliteTable("profile", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   createdAt: integer("created_at").notNull(),
 });
 
-const settings = sqliteTable(
-  "settings",
+const settingTable = sqliteTable(
+  "setting",
   {
     profileId: text("profile_id").notNull(),
     key: text("key").notNull(),
@@ -24,7 +24,7 @@ const settings = sqliteTable(
   (table) => [primaryKey({ columns: [table.profileId, table.key] })],
 );
 
-const tabs = sqliteTable("tabs", {
+const tabTable = sqliteTable("tab", {
   windowId: text("window_id").notNull().default("main"),
   lifecycle: text("lifecycle").notNull().default("{}"),
   id: text("id").primaryKey(),
@@ -39,7 +39,7 @@ const tabs = sqliteTable("tabs", {
   isActive: integer("is_active", { mode: "boolean" }).notNull(),
 });
 
-const tabGroups = sqliteTable("tab_groups", {
+const tabGroupTable = sqliteTable("tab_group", {
   windowId: text("window_id").notNull().default("main"),
   id: text("id").primaryKey(),
   name: text("name").notNull().default("Tab group"),
@@ -48,8 +48,8 @@ const tabGroups = sqliteTable("tab_groups", {
   position: integer("position").notNull(),
 });
 
-const tabGroupMembers = sqliteTable(
-  "tab_group_members",
+const tabGroupMemberTable = sqliteTable(
+  "tab_group_member",
   {
     groupId: text("group_id").notNull(),
     tabId: text("tab_id").notNull(),
@@ -58,7 +58,7 @@ const tabGroupMembers = sqliteTable(
   (table) => [primaryKey({ columns: [table.groupId, table.tabId] })],
 );
 
-const bookmarks = sqliteTable("bookmarks", {
+const bookmarkTable = sqliteTable("bookmark", {
   id: text("id").primaryKey(),
   profileId: text("profile_id").notNull(),
   title: text("title").notNull(),
@@ -91,7 +91,7 @@ const recentlyClosed = sqliteTable(
   (table) => [index("recently_closed_at_idx").on(sql`${table.closedAt} DESC`)],
 );
 
-const windows = sqliteTable("windows", {
+const windowTable = sqliteTable("window", {
   isOpen: integer("is_open", { mode: "boolean" }).notNull().default(true),
   id: text("id").primaryKey(),
   x: integer("x"),
@@ -101,15 +101,15 @@ const windows = sqliteTable("windows", {
   isMaximized: integer("is_maximized", { mode: "boolean" }).notNull(),
 });
 
-export const archivedTabs = sqliteTable("archived_tabs", {
+export const archivedTabTable = sqliteTable("archived_tab", {
   id: text("id").primaryKey(),
   windowId: text("window_id").notNull(),
   tabJson: text("tab_json").notNull(),
   archivedAt: integer("archived_at").notNull(),
 });
 
-const downloads = sqliteTable(
-  "downloads",
+const downloadTable = sqliteTable(
+  "download",
   {
     id: text("id").primaryKey(),
     profileId: text("profile_id").notNull(),
@@ -123,24 +123,24 @@ const downloads = sqliteTable(
     startedAt: integer("started_at").notNull(),
     updatedAt: integer("updated_at").notNull(),
   },
-  (table) => [index("downloads_started_at_idx").on(table.startedAt)],
+  (table) => [index("download_started_at_idx").on(table.startedAt)],
 );
 
 export {
-  downloads,
-  bookmarks,
+  downloadTable,
+  bookmarkTable,
   history,
-  profiles,
+  profileTable,
   recentlyClosed,
-  settings,
-  tabGroupMembers,
-  tabGroups,
-  tabs,
-  windows,
+  settingTable,
+  tabGroupMemberTable,
+  tabGroupTable,
+  tabTable,
+  windowTable,
 };
 
 /** Public SSO identity cache, separate from browser profiles/game accounts. */
-export const userProfiles = sqliteTable("user_profiles", {
+export const userProfileTable = sqliteTable("user_profile", {
   ssoUserId: text("sso_user_id").primaryKey().notNull(),
   name: text("name").notNull(),
   username: text("username"),

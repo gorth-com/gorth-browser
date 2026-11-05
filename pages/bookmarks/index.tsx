@@ -1,7 +1,7 @@
-import { Bookmark } from "lucide-react";
+import { Bookmark } from "@gorth-io/primitive/cores/lucide";
 import type { BrowserBookmark } from "@/components/dashboard/bookmarks";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@gorth-io/primitive/custom/button";
+import { Card, CardContent } from "@gorth-io/primitive/default/card";
 import { PageShell, EmptyState, LinkActionsPopover } from "@/pages/shared";
 import {
   TabGroups,
@@ -20,11 +20,7 @@ function BookmarksPage({
   onRemove: (id: string) => void;
 } & TabGroupsProps) {
   return (
-    <PageShell
-      description="Pages you saved for quick access."
-      icon={Bookmark}
-      title="Bookmarks"
-    >
+    <PageShell icon={Bookmark} title="Bookmarks">
       <TabGroups {...groupProps} />
       {bookmarks.length ? (
         <Card>

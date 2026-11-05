@@ -1,4 +1,6 @@
-import { appUrl } from "@/lib/utils/environment";
+import { defaultBrowserPreferences } from "@/utils/constant";
+import { appUrl } from "@/utils/environment";
+import { routeLoginCallback } from "@/main/services/login-navigation";
 import { installPortal } from "@/main/windows/portal";
 import {
   createWebview,
@@ -8,7 +10,7 @@ import {
 } from "@/main/windows/webview";
 import { app, BrowserWindow, nativeTheme, type WebContents } from "electron";
 import path from "node:path";
-import { parseHttpUrl } from "@/lib/utils/schema";
+import { parseHttpUrl } from "@/utils/schema";
 import { saveWindowState, setWindowOpen } from "@/services/browser-database";
 import {
   getInternalPageTitle,
@@ -22,7 +24,6 @@ import {
 } from "@/main/ipc/context-menu";
 import { getRestoredWindowOptions } from "@/main/windows/state";
 import {
-  defaultBrowserPreferences,
   type BrowserPreferences,
   type PersistedTab,
 } from "@/lib/browser/persistence";
@@ -32,6 +33,8 @@ import {
 } from "@/main/services/tab-lifecycle";
 import { registerBlockerContents } from "@/main/services/content-blocker";
 import { canRecoverQuicFailure } from "@/main/services/navigation";
+import { installSystemWindow, isSystemQuitting } from "@/main/services/system";
+import { getSystemPreferences } from "@/main/services/system-preferences";
 
 export type BrowserLayout = WebviewLayout;
 
@@ -95,7 +98,7 @@ export function getWindowFromSender(sender: WebContents) {
 export function getRuntimeAppIconPath() {
   const filename = process.platform === "win32" ? "favicon.ico" : "favicon.png";
 
-  return path.join(app.getAppPath(), "assets", filename);
+  return path.join(app.getAppPath(), "public", filename);
 }
 
 export function getBrowserState(window: BrowserWindow) {
@@ -219,6 +222,8 @@ export function setWebFullScreen(
 ) {
   const state = getBrowserState(window);
   if (enabled) {
+    if (window.isFullScreen() && getSystemPreferences().fullscreenReminder)
+      window.webContents.send("system:fullscreen-reminder");
     state.webFullScreenTabId = tabId;
     state.wasFullScreenBeforeWeb = window.isFullScreen();
     if (!window.isFullScreen()) window.setFullScreen(true);
@@ -289,7 +294,19 @@ export function createTabView(window: BrowserWindow, tabId: string) {
   view.webContents.on("did-navigate-in-page", () => {
     sendNavigationState(window, tabId, record);
   });
+  view.webContents.on("will-redirect", (event, url, _inPlace, isMainFrame) => {
+    if (!isMainFrame) {
+      if (/^com\.gorth\.(browser|launcher):/i.test(url)) event.preventDefault();
+      return;
+    }
+    if (isMainFrame && routeLoginCallback(view.webContents, url))
+      event.preventDefault();
+  });
   view.webContents.on("will-navigate", (event, url) => {
+    if (routeLoginCallback(view.webContents, url)) {
+      event.preventDefault();
+      return;
+    }
     const internalPage = parseInternalPage(url);
     if (!internalPage) return;
 
@@ -340,7 +357,9 @@ export function createTabView(window: BrowserWindow, tabId: string) {
       params,
     );
   });
-  view.webContents.setWindowOpenHandler(({ url }) => {
+  view.webContents.setWindowOpenHandler(({ url, referrer }) => {
+    if (routeLoginCallback(view.webContents, url, referrer.url))
+      return { action: "deny" };
     const internalPage = parseInternalPage(url);
     if (
       (internalPage || isAllowedNavigationUrl(url)) &&
@@ -374,11 +393,6 @@ export function isAllowedNavigationUrl(value: string) {
     return false;
   }
 }
-
-let quitting = false;
-app.on("before-quit", () => {
-  quitting = true;
-});
 
 export const createWindow = (sessionId: string = crypto.randomUUID()) => {
   const restored = getRestoredWindowOptions(sessionId);
@@ -448,6 +462,7 @@ export const createWindow = (sessionId: string = crypto.randomUUID()) => {
     wasFullScreenBeforeWeb: false,
   });
   trackTabLifecycle(mainWindow);
+  installSystemWindow(mainWindow, () => getBrowserState(mainWindow).tabMetadata.size);
 
   const notifyFullScreenChanged = () => {
     if (!mainWindow.webContents.isDestroyed()) {
@@ -478,7 +493,8 @@ export const createWindow = (sessionId: string = crypto.randomUUID()) => {
   mainWindow.on("move", persistWindow);
   mainWindow.on("maximize", persistWindow);
   mainWindow.on("unmaximize", persistWindow);
-  mainWindow.on("close", () => {
+  mainWindow.on("close", (event) => {
+    if (event.defaultPrevented) return;
     dismissPortalMenuForParent(mainWindow);
     if (saveWindowTimer) clearTimeout(saveWindowTimer);
     const bounds = mainWindow.getNormalBounds();
@@ -486,7 +502,7 @@ export const createWindow = (sessionId: string = crypto.randomUUID()) => {
       { ...bounds, isMaximized: mainWindow.isMaximized() },
       sessionId,
     );
-    setWindowOpen(sessionId, quitting || getBrowserWindows().length === 1);
+    setWindowOpen(sessionId, isSystemQuitting() || getBrowserWindows().length === 1);
   });
   mainWindow.on("enter-full-screen", notifyFullScreenChanged);
   mainWindow.on("leave-full-screen", notifyFullScreenChanged);
@@ -509,14 +525,14 @@ export const createWindow = (sessionId: string = crypto.randomUUID()) => {
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL || appUrl) {
     void mainWindow.loadURL(
-      new URL("assets/index.html", appUrl || MAIN_WINDOW_VITE_DEV_SERVER_URL)
+      new URL("public/index.html", appUrl || MAIN_WINDOW_VITE_DEV_SERVER_URL)
         .href,
     );
   } else {
     void mainWindow.loadFile(
       path.join(
         __dirname,
-        `../renderer/${MAIN_WINDOW_VITE_NAME}/assets/index.html`,
+        `../renderer/${MAIN_WINDOW_VITE_NAME}/public/index.html`,
       ),
     );
   }

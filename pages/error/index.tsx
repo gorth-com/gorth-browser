@@ -1,19 +1,18 @@
 import { useState } from "react";
-import { Gamepad2, RefreshCw, Rocket } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Gamepad2, RefreshCw, Rocket } from "@gorth-io/primitive/cores/lucide";
+import { Badge } from "@gorth-io/primitive/custom/badge";
+import { Button } from "@gorth-io/primitive/custom/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@gorth-io/primitive/default/card";
 import { type SpecialPageProps, PageShell } from "@/pages/shared";
 function ErrorPage({
   errorCode,
   errorDescription,
-  errorUrl,
   onRetry,
 }: Pick<
   SpecialPageProps,
@@ -26,11 +25,7 @@ function ErrorPage({
     setTarget((value) => (value * 7 + 11) % 25);
   };
   return (
-    <PageShell
-      description={errorUrl || "The requested website could not be reached."}
-      icon={Gamepad2}
-      title="This page is unavailable"
-    >
+    <PageShell icon={Gamepad2} title="This page is unavailable">
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <Card>
           <CardHeader>

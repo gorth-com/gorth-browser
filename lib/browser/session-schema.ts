@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@gorth-io/structure/cores/zod";
 import {
   parseInternalPage,
   type BrowserInternalPage,
@@ -78,8 +78,12 @@ export const browserSnapshotSchema = z
       )
       .max(10000),
     preferences: z.object({
+      tabLayout: z.enum(["separate", "compact"]).default("separate"),
+      enableWorkspace: z.boolean().default(false),
       flags: z.record(z.string(), z.boolean()),
       sidebarSide: z.enum(["left", "right"]),
+      sidebarCollapsible: z.boolean().default(false),
+      sidebarCollapseMode: z.enum(["icon", "none"]).default("icon"),
       showTitlebarLogo: z.boolean(),
       theme: z.enum(["dark", "light", "system"]),
       verticalCollapsed: z.boolean(),

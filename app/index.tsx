@@ -1,3 +1,5 @@
+import { SPACE_BAR_WIDTH, defaultBrowserPreferences } from "@/utils/constant";
+import { useSystemEffects } from "@/hooks/use-system-settings";
 import {
   useCallback,
   useEffect,
@@ -8,9 +10,10 @@ import {
   type MouseEvent,
 } from "react";
 
-import { Dashboard } from "@/layouts/dashboard";
+import { PanelBar } from "@/layouts/panel-bar";
+import { SIDEBAR_WIDTH } from "@/utils/constant";
 import { useTRPC, useTRPCClient } from "@/lib/rpc/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@gorth-io/primitive/cores/tanstack/query";
 import type {
   BrowserBookmark,
   BrowserSidebarSide,
@@ -21,17 +24,24 @@ import { LoadingScreen } from "@/components/element/loading-screen";
 import { NewTabPage } from "@/pages/new-tab";
 import { SpecialPage, type BrowserHistoryItem } from "@/pages";
 import { AddressBar } from "@/layouts/address-bar";
-import { Titlebar } from "@/layouts/titlebar";
+import type { FeatureBlockProps } from "@/layouts/feature-block";
+import {
+  getBrowserChromeLayout,
+  selectTabLayout,
+  type TabLayout,
+} from "@/lib/browser/tab-layout";
+import { Titlebar } from "@/layouts/title-bar";
 import { VerticalTabs } from "@/layouts/vertical-tabs";
+import { SpaceBar } from "@/layouts/space-bar";
 import { getPortalMenuTheme } from "@/lib/browser/browser-menu";
 import {
+  findInternalPageTab,
   getInternalPageTitle,
   getInternalPageUrl,
   parseInternalPage,
   type BrowserInternalPage,
 } from "@/lib/browser/internal-pages";
 import {
-  defaultBrowserPreferences,
   type BrowserSnapshot,
   type PersistedTab,
   type PersistedTabGroup,
@@ -39,9 +49,6 @@ import {
 import { applyTheme, subscribeToSystemTheme, type Theme } from "@/lib/theme";
 import { toast } from "@/providers/toaster";
 import { useAuth } from "@/hooks/use-auth";
-
-const BROWSER_CHROME_HEIGHT = 112;
-const SIDEBAR_WIDTH = 256;
 
 function createNewTab(id: string, title = "Home"): BrowserTabItem {
   return {
@@ -117,6 +124,7 @@ function toPersistedTab(tab: BrowserTabItem): PersistedTab {
 }
 
 export default function Application() {
+  useSystemEffects();
   const desktop = useTRPCClient();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -154,8 +162,29 @@ export default function Application() {
       unsubscribeErrors();
     };
   }, []);
+  const [tabLayout, setTabLayout] = useState(
+    defaultBrowserPreferences.tabLayout,
+  );
+  const [sidebarCollapsible, setSidebarCollapsible] = useState(
+    defaultBrowserPreferences.sidebarCollapsible,
+  );
+  const [sidebarCollapseMode, setSidebarCollapseMode] = useState(
+    defaultBrowserPreferences.sidebarCollapseMode,
+  );
   const [verticalTabs, setVerticalTabs] = useState(
     defaultBrowserPreferences.verticalTabs,
+  );
+  function changeTabLayout(selection: TabLayout | boolean) {
+    const next = selectTabLayout(tabLayout, verticalTabs, selection);
+    setTabLayout(next.tabLayout);
+    setVerticalTabs(next.verticalTabs);
+  }
+  const { hasVerticalTabs, height: chromeHeight } = getBrowserChromeLayout(
+    tabLayout,
+    verticalTabs,
+  );
+  const [enableWorkspace, setEnableWorkspace] = useState(
+    defaultBrowserPreferences.enableWorkspace,
   );
   const [verticalCollapsed, setVerticalCollapsed] = useState(
     defaultBrowserPreferences.verticalCollapsed,
@@ -166,6 +195,12 @@ export default function Application() {
   const currentSnapshot = useRef<BrowserSnapshot | null>(null);
   const [activeTabId, setActiveTabId] = useState("home");
   const [bookmarks, setBookmarks] = useState<BrowserBookmark[]>([]);
+  useEffect(() => window.electronAPI.setup.onBookmarksImported((items) => {
+    setBookmarks(current => {
+      const urls = new Set(current.map(item => item.url));
+      return [...current, ...items.filter(item => !urls.has(item.url))];
+    });
+  }), []);
   const [history, setHistory] = useState<BrowserHistoryItem[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sidebarSide, setSidebarSide] = useState<BrowserSidebarSide>(
@@ -276,9 +311,9 @@ export default function Application() {
               tab.id === id
                 ? {
                     ...tab,
-                    url: state.url ?? tab.url,
+                    url: "gorth://auth",
                     title: "Đăng nhập Gorth",
-                    internalPage: null,
+                    internalPage: "auth",
                     isLoading: !!state.loading,
                     canGoBack: true,
                   }
@@ -290,7 +325,7 @@ export default function Application() {
                 ...createInternalTab(id, "auth"),
                 url: state.url ?? "gorth://auth",
                 title: "Đăng nhập Gorth",
-                internalPage: null,
+                internalPage: "auth",
                 isLoading: !!state.loading,
                 canGoBack: true,
               },
@@ -345,9 +380,17 @@ export default function Application() {
         setSplitTabId(snapshot.splitTabId);
         setBookmarks(snapshot.bookmarks);
         setHistory(snapshot.history);
+        setTabLayout(
+          snapshot.preferences.verticalTabs
+            ? "compact"
+            : snapshot.preferences.tabLayout,
+        );
         setVerticalTabs(snapshot.preferences.verticalTabs);
+        setEnableWorkspace(snapshot.preferences.enableWorkspace);
         setVerticalCollapsed(snapshot.preferences.verticalCollapsed);
         setSidebarSide(snapshot.preferences.sidebarSide);
+        setSidebarCollapsible(snapshot.preferences.sidebarCollapsible);
+        setSidebarCollapseMode(snapshot.preferences.sidebarCollapseMode);
         setShowTitlebarLogo(snapshot.preferences.showTitlebarLogo);
         setFlags(snapshot.preferences.flags);
         setSleepAfterMinutes(snapshot.preferences.sleepAfterMinutes);
@@ -383,6 +426,12 @@ export default function Application() {
   }, [activeTabId, isHydrated]);
 
   useEffect(() => {
+    if (isHydrated) void window.electronAPI.setup.ready().catch(() => {
+      console.warn("Unable to receive external browser links.");
+    });
+  }, [isHydrated]);
+
+  useEffect(() => {
     if (!isHydrated) return;
     const group = groups.find((item) => item.tabIds.includes(activeTabId));
     const partnerId =
@@ -402,9 +451,10 @@ export default function Application() {
   useLayoutEffect(() => {
     window.electronAPI.tabs.setLayout({
       top: isHydrated
-        ? (verticalTabs ? 56 : BROWSER_CHROME_HEIGHT) + (isFindOpen ? 48 : 0)
+        ? chromeHeight + (isFindOpen ? 48 : 0)
         : window.innerHeight,
-      verticalTabsWidth: verticalTabs ? (verticalCollapsed ? 56 : 200) : 0,
+      verticalTabsWidth: hasVerticalTabs ? (verticalCollapsed ? 56 : 200) : 0,
+      spaceBarWidth: enableWorkspace ? SPACE_BAR_WIDTH : 0,
       sidebarWidth: isSidebarVisible ? SIDEBAR_WIDTH : 0,
       sidebarSide,
     });
@@ -413,8 +463,10 @@ export default function Application() {
     isFindOpen,
     isSidebarVisible,
     sidebarSide,
-    verticalTabs,
+    chromeHeight,
+    hasVerticalTabs,
     verticalCollapsed,
+    enableWorkspace,
   ]);
 
   useLayoutEffect(() => {
@@ -444,6 +496,10 @@ export default function Application() {
       bookmarks,
       history,
       preferences: {
+        sidebarCollapsible,
+        sidebarCollapseMode,
+        tabLayout,
+        enableWorkspace,
         sleepAfterMinutes,
         archiveAfterDays,
         flags,
@@ -479,13 +535,17 @@ export default function Application() {
     isHydrated,
     showTitlebarLogo,
     sidebarSide,
+    sidebarCollapsible,
+    sidebarCollapseMode,
     splitTabId,
     tabs,
     theme,
     verticalCollapsed,
     verticalTabs,
+    tabLayout,
     sleepAfterMinutes,
     archiveAfterDays,
+    enableWorkspace,
   ]);
 
   useEffect(
@@ -510,6 +570,10 @@ export default function Application() {
     () => window.electronAPI.tabs.onOpenRequested(openWebTab),
     [openWebTab],
   );
+  useEffect(() => {
+    if (!isHydrated) return;
+    return window.electronAPI.auth.onNavigationRequested(openWebTab);
+  }, [isHydrated, openWebTab]);
 
   useEffect(
     () =>
@@ -564,7 +628,10 @@ export default function Application() {
   };
 
   const closeTab = (tabId: string) => {
-    if (tabs.length === 1) return;
+    if (tabs.length === 1) {
+      void window.electronAPI.system.closeLastTab().catch(() => toast.add({ title: "Could not close this window.", type: "error" }));
+      return;
+    }
     if (tabId === authTabId.current) {
       authTabId.current = null;
       void authentication.cancel();
@@ -688,24 +755,15 @@ export default function Application() {
 
   const openInternalPage = (page: Exclude<BrowserInternalPage, "new-tab">) => {
     const isSettings = page === "settings" || page.startsWith("settings/");
-    const existingTab =
-      tabs.find((tab) => tab.internalPage === page) ??
-      (isSettings
-        ? tabs.find(
-            (tab) =>
-              tab.internalPage === "settings" ||
-              tab.internalPage?.startsWith("settings/"),
-          )
-        : undefined);
+    const existingTab = findInternalPageTab(tabs, activeTabId, page);
 
     setSplitTabId(null);
     window.electronAPI.tabs.setSplit(null);
 
     if (existingTab) {
       if (
-        isSettings &&
-        page !== "settings" &&
-        existingTab.internalPage !== page
+        existingTab.internalPage === "new-tab" ||
+        (isSettings && page !== "settings" && existingTab.internalPage !== page)
       ) {
         setTabs((current) =>
           current.map((tab) =>
@@ -855,13 +913,40 @@ export default function Application() {
 
   if (!isHydrated) return <LoadingScreen error={startupError} />;
 
+  const featureProps: FeatureBlockProps = {
+    verticalTabs: hasVerticalTabs,
+    verticalCollapsed,
+    onToggleVerticalSidebar: () =>
+      setVerticalCollapsed((collapsed) => !collapsed),
+    activeTab,
+    canSplit,
+    isBookmarked,
+    isSidebarOpen: isSidebarVisible,
+    isSplit: Boolean(splitTabId),
+    onBack: goBack,
+    onBookmark: toggleBookmark,
+    onCreateTab: createTab,
+    onForward: () => window.electronAPI.tabs.forward(activeTabId),
+    onHome: () => navigate("https://www.google.com"),
+    onNavigate: navigate,
+    onOpenInternal: openInternalPage,
+    onReload: () =>
+      activeTab.internalPage === "auth"
+        ? void window.electronAPI.auth.reloadView()
+        : window.electronAPI.tabs.reload(activeTabId),
+    onStop: () => window.electronAPI.tabs.stop(activeTabId),
+    onToggleSidebar: () => setIsSidebarOpen((isOpen) => !isOpen),
+    onToggleSplit: toggleSplit,
+  };
+
   return (
     <div
       className="flex h-screen flex-col overflow-hidden bg-background text-foreground"
       onContextMenu={openPageContextMenu}
     >
-      {!isWebFullScreen && !verticalTabs && (
+      {!isWebFullScreen && !hasVerticalTabs && (
         <Titlebar
+          compactFeatures={tabLayout === "compact" ? featureProps : undefined}
           groups={groups}
           activeTabId={activeTabId}
           showLogo={showTitlebarLogo}
@@ -875,34 +960,8 @@ export default function Application() {
           onTogglePinTab={toggleTabPinned}
         />
       )}
-      {!isWebFullScreen && (
-        <AddressBar
-          verticalTabs={verticalTabs}
-          verticalCollapsed={verticalCollapsed}
-          onToggleVerticalSidebar={() =>
-            setVerticalCollapsed((collapsed) => !collapsed)
-          }
-          activeTab={activeTab}
-          canSplit={canSplit}
-          isBookmarked={isBookmarked}
-          isSidebarOpen={isSidebarVisible}
-          isSplit={Boolean(splitTabId)}
-          onBack={goBack}
-          onBookmark={toggleBookmark}
-          onCreateTab={createTab}
-          onForward={() => window.electronAPI.tabs.forward(activeTabId)}
-          onHome={() => navigate("https://www.google.com")}
-          onNavigate={navigate}
-          onOpenInternal={openInternalPage}
-          onReload={() =>
-            activeTab.internalPage === "auth"
-              ? void window.electronAPI.auth.reloadView()
-              : window.electronAPI.tabs.reload(activeTabId)
-          }
-          onStop={() => window.electronAPI.tabs.stop(activeTabId)}
-          onToggleSidebar={() => setIsSidebarOpen((isOpen) => !isOpen)}
-          onToggleSplit={toggleSplit}
-        />
+      {!isWebFullScreen && (tabLayout === "separate" || hasVerticalTabs) && (
+        <AddressBar {...featureProps} />
       )}
       {!isWebFullScreen && isFindOpen && (
         <FindInPage tabId={activeTabId} onClose={() => setIsFindOpen(false)} />
@@ -910,7 +969,8 @@ export default function Application() {
 
       {!isWebFullScreen && (
         <div className="relative flex min-h-0 flex-1">
-          {verticalTabs && (
+          {enableWorkspace && <SpaceBar />}
+          {hasVerticalTabs && (
             <VerticalTabs
               groups={groups}
               activeTabId={activeTabId}
@@ -926,12 +986,9 @@ export default function Application() {
             />
           )}
           {isSidebarVisible && sidebarSide === "left" && (
-            <Dashboard
-              variant="bookmarks"
+            <PanelBar
               side={sidebarSide}
-              bookmarks={bookmarks}
               onClose={() => setIsSidebarOpen(false)}
-              onNavigate={navigate}
             />
           )}
           <main className="relative min-w-0 flex-1 overflow-auto">
@@ -944,6 +1001,16 @@ export default function Application() {
             )}
             {activeTab.internalPage && activeTab.internalPage !== "new-tab" && (
               <SpecialPage
+                sidebarVisible={isSidebarVisible}
+                onSidebarVisibilityChange={setIsSidebarOpen}
+                sidebarCollapsible={sidebarCollapsible}
+                sidebarCollapseMode={sidebarCollapseMode}
+                onSidebarCollapsibleChange={setSidebarCollapsible}
+                onSidebarCollapseModeChange={setSidebarCollapseMode}
+                tabLayout={tabLayout}
+                onTabLayoutChange={changeTabLayout}
+                enableWorkspace={enableWorkspace}
+                onEnableWorkspaceChange={setEnableWorkspace}
                 groups={groups}
                 tabs={tabs}
                 onSaveGroup={async (group) => {
@@ -987,7 +1054,7 @@ export default function Application() {
                 sidebarSide={sidebarSide}
                 showTitlebarLogo={showTitlebarLogo}
                 verticalTabs={verticalTabs}
-                onVerticalTabsChange={setVerticalTabs}
+                onVerticalTabsChange={changeTabLayout}
                 flags={flags}
                 onFlagsChange={setFlags}
                 sleepAfterMinutes={sleepAfterMinutes}
@@ -1018,12 +1085,9 @@ export default function Application() {
             )}
           </main>
           {isSidebarVisible && sidebarSide === "right" && (
-            <Dashboard
-              variant="bookmarks"
+            <PanelBar
               side={sidebarSide}
-              bookmarks={bookmarks}
               onClose={() => setIsSidebarOpen(false)}
-              onNavigate={navigate}
             />
           )}
         </div>

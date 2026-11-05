@@ -1,29 +1,41 @@
-import { settingsPageDefinitions } from "./settings-definitions";
-import { urlSchema } from "@/lib/utils/schema";
+import {
+  internalPageDefinitions,
+  settingsPageDefinitions,
+} from "@/utils/constant";
+
+import { urlSchema } from "@/utils/schema";
+import type { PersistedTab } from "@/lib/browser/persistence";
 
 interface InternalPageDefinition {
   title: string;
   url: string;
 }
 
-const internalPageDefinitions = {
-  auth: { title: "Gorth Account", url: "gorth://auth" },
-  archive: { title: "Archived tabs", url: "gorth://archive" },
-  shortcuts: { title: "Keyboard shortcuts", url: "gorth://shortcuts" },
-  help: { title: "Help", url: "gorth://help" },
-  welcome: { title: "Welcome to Gorth", url: "gorth://welcome" },
-  "whats-new": { title: "What's new", url: "gorth://whats-new" },
-  error: { title: "Page unavailable", url: "gorth://error" },
-  settings: { title: "Settings", url: "gorth://settings" },
-  downloads: { title: "Downloads", url: "gorth://downloads" },
-  bookmarks: { title: "Bookmarks", url: "gorth://bookmarks" },
-  history: { title: "History", url: "gorth://history" },
-  flags: { title: "Experiments", url: "gorth://flags" },
-  extensions: { title: "Extensions", url: "gorth://extensions" },
-  ...settingsPageDefinitions,
-} as const satisfies Record<string, InternalPageDefinition>;
-
 type BrowserInternalPage = "new-tab" | keyof typeof internalPageDefinitions;
+
+/** Prefer the active New Tab; otherwise keep the existing feature-tab reuse policy. */
+function findInternalPageTab<
+  T extends Pick<PersistedTab, "id" | "internalPage">,
+>(
+  tabs: readonly T[],
+  activeTabId: string,
+  page: Exclude<BrowserInternalPage, "new-tab">,
+): T | undefined {
+  const activeTab = tabs.find((tab) => tab.id === activeTabId);
+  if (activeTab?.internalPage === "new-tab") return activeTab;
+
+  const isSettings = page === "settings" || page.startsWith("settings/");
+  return (
+    tabs.find((tab) => tab.internalPage === page) ??
+    (isSettings
+      ? tabs.find(
+          (tab) =>
+            tab.internalPage === "settings" ||
+            tab.internalPage?.startsWith("settings/"),
+        )
+      : undefined)
+  );
+}
 
 function parseInternalPage(value: string): BrowserInternalPage | null {
   try {
@@ -58,9 +70,9 @@ function getInternalPageTitle(page: BrowserInternalPage) {
 }
 
 export {
+  findInternalPageTab,
   getInternalPageTitle,
   getInternalPageUrl,
-  internalPageDefinitions,
   parseInternalPage,
 };
 export type { BrowserInternalPage, InternalPageDefinition };
