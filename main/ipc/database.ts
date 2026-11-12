@@ -1,4 +1,6 @@
 import { ipcMain } from "electron";
+import { captureSyncSnapshot, syncStatus, configureSync, runSync, syncBackups, startSyncScheduler } from "@/main/services/sync";
+import { getRpcRendererUrl, isRpcRendererUrl } from "@/main/rpc/sender";
 import { z } from "@gorth-io/structure/cores/zod";
 import {
   addRecentlyClosedTab,
@@ -23,6 +25,21 @@ import {
 } from "@/lib/browser/session-schema";
 
 export function registerDatabaseIpc() {
+  const trustedSyncWindow = (event: Electron.IpcMainInvokeEvent) => {
+    const window = getWindowFromSender(event.sender);
+    if (!window || window.webContents !== event.sender || event.senderFrame !== event.sender.mainFrame || !isRpcRendererUrl(event.sender.getURL(), getRpcRendererUrl())) throw new Error("Untrusted sync request.");
+    return window;
+  };
+  ipcMain.handle("sync:status", (event) => { trustedSyncWindow(event); return syncStatus(); });
+  ipcMain.handle("sync:configure", (event, input: unknown) => configureSync(trustedSyncWindow(event), input));
+  ipcMain.handle("sync:now", (event) => runSync(trustedSyncWindow(event)));
+  ipcMain.handle("sync:backups", (event, action: unknown, id: unknown) => {
+    const window = trustedSyncWindow(event);
+    const operation = z.enum(["list", "save", "restore", "delete"]).parse(action);
+    const backupId = operation === "restore" || operation === "delete" ? z.uuid().parse(id) : undefined;
+    return syncBackups(window, operation, backupId);
+  });
+  startSyncScheduler();
   const requireAppSender = (sender: Electron.WebContents) => {
     const window = getWindowFromSender(sender);
     if (!window || window.webContents !== sender)
@@ -57,6 +74,7 @@ export function registerDatabaseIpc() {
     const window = getWindowFromSender(event.sender)!;
     synchronizeTabSession(window, snapshot);
     saveBrowserSnapshot(snapshot, windowId);
+    captureSyncSnapshot(snapshot, windowId);
   });
   ipcMain.on("persistence:flush", (event, snapshot: BrowserSnapshot) => {
     try {
@@ -68,6 +86,7 @@ export function registerDatabaseIpc() {
       snapshot = browserSnapshotSchema.parse(snapshot);
       synchronizeTabSession(window, snapshot);
       saveBrowserSnapshot(snapshot, requireAppSender(event.sender));
+      captureSyncSnapshot(snapshot, requireAppSender(event.sender));
       event.returnValue = true;
     } catch (error) {
       console.error(

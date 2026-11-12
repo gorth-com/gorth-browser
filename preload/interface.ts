@@ -24,6 +24,7 @@ export interface BrowserTabState {
   internalPage: BrowserInternalPage | null;
 }
 export interface ElectronApi {
+  sync: typeof import("@/preload/api/sync").syncApi;
   system: typeof import("@/preload/api/system").systemApi;
   folders: typeof import("@/preload/api/folders").foldersApi;
   networkProxy: typeof import("@/preload/api/proxy").networkProxyApi;

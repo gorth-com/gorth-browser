@@ -195,6 +195,18 @@ export default function Application() {
   const currentSnapshot = useRef<BrowserSnapshot | null>(null);
   const [activeTabId, setActiveTabId] = useState("home");
   const [bookmarks, setBookmarks] = useState<BrowserBookmark[]>([]);
+  useEffect(() => window.electronAPI.sync.onApplied((snapshot) => {
+    setBookmarks(snapshot.bookmarks);
+    setGroups(snapshot.groups);
+    setTabs(snapshot.tabs.length ? snapshot.tabs.map((tab) => ({ ...tab, canGoBack: false, canGoForward: false, isHome: tab.internalPage === "new-tab", isLoading: false })) : [createNewTab("home")]);
+    setActiveTabId(snapshot.activeTabId ?? snapshot.tabs[0]?.id ?? "home");
+    setSplitTabId(snapshot.splitTabId);
+    setTheme(snapshot.preferences.theme);
+    setTabLayout(snapshot.preferences.tabLayout);
+    setVerticalTabs(snapshot.preferences.verticalTabs);
+    setSidebarSide(snapshot.preferences.sidebarSide);
+    setEnableWorkspace(snapshot.preferences.enableWorkspace);
+  }), []);
   useEffect(() => window.electronAPI.setup.onBookmarksImported((items) => {
     setBookmarks(current => {
       const urls = new Set(current.map(item => item.url));

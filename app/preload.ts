@@ -1,4 +1,5 @@
 import { contextBridge } from "electron";
+import { syncApi } from "@/preload/api/sync";
 import { systemApi } from "@/preload/api/system";
 import { foldersApi } from "@/preload/api/folders";
 import { networkProxyApi } from "@/preload/api/proxy";
@@ -27,6 +28,7 @@ import { lifecycleApi } from "@/preload/api/lifecycle";
 import { shieldsApi } from "@/preload/api/shields";
 
 const electronAPI = {
+  sync: syncApi,
   system: systemApi,
   folders: foldersApi,
   networkProxy: networkProxyApi,
