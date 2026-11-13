@@ -1,5 +1,12 @@
 import { ipcMain } from "electron";
-import { captureSyncSnapshot, syncStatus, configureSync, runSync, syncBackups, startSyncScheduler } from "@/main/services/sync";
+import {
+  captureSyncSnapshot,
+  syncStatus,
+  configureSync,
+  runSync,
+  syncBackups,
+  startSyncScheduler,
+} from "@/main/services/sync";
 import { getRpcRendererUrl, isRpcRendererUrl } from "@/main/rpc/sender";
 import { z } from "@gorth-io/structure/cores/zod";
 import {
@@ -27,16 +34,32 @@ import {
 export function registerDatabaseIpc() {
   const trustedSyncWindow = (event: Electron.IpcMainInvokeEvent) => {
     const window = getWindowFromSender(event.sender);
-    if (!window || window.webContents !== event.sender || event.senderFrame !== event.sender.mainFrame || !isRpcRendererUrl(event.sender.getURL(), getRpcRendererUrl())) throw new Error("Untrusted sync request.");
+    if (
+      !window ||
+      window.webContents !== event.sender ||
+      event.senderFrame !== event.sender.mainFrame ||
+      !isRpcRendererUrl(event.sender.getURL(), getRpcRendererUrl())
+    )
+      throw new Error("Untrusted sync request.");
     return window;
   };
-  ipcMain.handle("sync:status", (event) => { trustedSyncWindow(event); return syncStatus(); });
-  ipcMain.handle("sync:configure", (event, input: unknown) => configureSync(trustedSyncWindow(event), input));
+  ipcMain.handle("sync:status", (event) => {
+    trustedSyncWindow(event);
+    return syncStatus();
+  });
+  ipcMain.handle("sync:configure", (event, input: unknown) =>
+    configureSync(trustedSyncWindow(event), input),
+  );
   ipcMain.handle("sync:now", (event) => runSync(trustedSyncWindow(event)));
   ipcMain.handle("sync:backups", (event, action: unknown, id: unknown) => {
     const window = trustedSyncWindow(event);
-    const operation = z.enum(["list", "save", "restore", "delete"]).parse(action);
-    const backupId = operation === "restore" || operation === "delete" ? z.uuid().parse(id) : undefined;
+    const operation = z
+      .enum(["list", "save", "restore", "delete"])
+      .parse(action);
+    const backupId =
+      operation === "restore" || operation === "delete"
+        ? z.uuid().parse(id)
+        : undefined;
     return syncBackups(window, operation, backupId);
   });
   startSyncScheduler();

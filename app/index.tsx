@@ -195,24 +195,42 @@ export default function Application() {
   const currentSnapshot = useRef<BrowserSnapshot | null>(null);
   const [activeTabId, setActiveTabId] = useState("home");
   const [bookmarks, setBookmarks] = useState<BrowserBookmark[]>([]);
-  useEffect(() => window.electronAPI.sync.onApplied((snapshot) => {
-    setBookmarks(snapshot.bookmarks);
-    setGroups(snapshot.groups);
-    setTabs(snapshot.tabs.length ? snapshot.tabs.map((tab) => ({ ...tab, canGoBack: false, canGoForward: false, isHome: tab.internalPage === "new-tab", isLoading: false })) : [createNewTab("home")]);
-    setActiveTabId(snapshot.activeTabId ?? snapshot.tabs[0]?.id ?? "home");
-    setSplitTabId(snapshot.splitTabId);
-    setTheme(snapshot.preferences.theme);
-    setTabLayout(snapshot.preferences.tabLayout);
-    setVerticalTabs(snapshot.preferences.verticalTabs);
-    setSidebarSide(snapshot.preferences.sidebarSide);
-    setEnableWorkspace(snapshot.preferences.enableWorkspace);
-  }), []);
-  useEffect(() => window.electronAPI.setup.onBookmarksImported((items) => {
-    setBookmarks(current => {
-      const urls = new Set(current.map(item => item.url));
-      return [...current, ...items.filter(item => !urls.has(item.url))];
-    });
-  }), []);
+  useEffect(
+    () =>
+      window.electronAPI.sync.onApplied((snapshot) => {
+        setBookmarks(snapshot.bookmarks);
+        setGroups(snapshot.groups);
+        setTabs(
+          snapshot.tabs.length
+            ? snapshot.tabs.map((tab) => ({
+                ...tab,
+                canGoBack: false,
+                canGoForward: false,
+                isHome: tab.internalPage === "new-tab",
+                isLoading: false,
+              }))
+            : [createNewTab("home")],
+        );
+        setActiveTabId(snapshot.activeTabId ?? snapshot.tabs[0]?.id ?? "home");
+        setSplitTabId(snapshot.splitTabId);
+        setTheme(snapshot.preferences.theme);
+        setTabLayout(snapshot.preferences.tabLayout);
+        setVerticalTabs(snapshot.preferences.verticalTabs);
+        setSidebarSide(snapshot.preferences.sidebarSide);
+        setEnableWorkspace(snapshot.preferences.enableWorkspace);
+      }),
+    [],
+  );
+  useEffect(
+    () =>
+      window.electronAPI.setup.onBookmarksImported((items) => {
+        setBookmarks((current) => {
+          const urls = new Set(current.map((item) => item.url));
+          return [...current, ...items.filter((item) => !urls.has(item.url))];
+        });
+      }),
+    [],
+  );
   const [history, setHistory] = useState<BrowserHistoryItem[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sidebarSide, setSidebarSide] = useState<BrowserSidebarSide>(
@@ -438,9 +456,10 @@ export default function Application() {
   }, [activeTabId, isHydrated]);
 
   useEffect(() => {
-    if (isHydrated) void window.electronAPI.setup.ready().catch(() => {
-      console.warn("Unable to receive external browser links.");
-    });
+    if (isHydrated)
+      void window.electronAPI.setup.ready().catch(() => {
+        console.warn("Unable to receive external browser links.");
+      });
   }, [isHydrated]);
 
   useEffect(() => {
@@ -641,7 +660,11 @@ export default function Application() {
 
   const closeTab = (tabId: string) => {
     if (tabs.length === 1) {
-      void window.electronAPI.system.closeLastTab().catch(() => toast.add({ title: "Could not close this window.", type: "error" }));
+      void window.electronAPI.system
+        .closeLastTab()
+        .catch(() =>
+          toast.add({ title: "Could not close this window.", type: "error" }),
+        );
       return;
     }
     if (tabId === authTabId.current) {

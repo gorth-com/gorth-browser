@@ -7,7 +7,11 @@ import {
 } from "@gorth-io/primitive/default/input-group";
 import { Search, ArrowRight } from "@gorth-io/primitive/cores/lucide";
 
-export function SearchForm({ onSubmit }: { onSubmit: (value: string) => void }) {
+export function SearchForm({
+  onSubmit,
+}: {
+  onSubmit: (value: string) => void;
+}) {
   const form = useForm({
     defaultValues: { query: "" },
     onSubmit: async ({ value }) => {
@@ -26,7 +30,9 @@ export function SearchForm({ onSubmit }: { onSubmit: (value: string) => void }) 
       <form.Field name="query">
         {(field) => (
           <InputGroup className="h-12 rounded-xl bg-card shadow-lg shadow-foreground/5">
-            <InputGroupAddon className="pl-4"><Search className="size-4" /></InputGroupAddon>
+            <InputGroupAddon className="pl-4">
+              <Search className="size-4" />
+            </InputGroupAddon>
             <InputGroupInput
               aria-label="Search or enter address"
               autoFocus
@@ -36,7 +42,14 @@ export function SearchForm({ onSubmit }: { onSubmit: (value: string) => void }) 
               value={field.state.value}
             />
             <InputGroupAddon align="inline-end" className="pr-2">
-              <InputGroupButton aria-label="Open page" size="icon-sm" type="submit" variant="default"><ArrowRight /></InputGroupButton>
+              <InputGroupButton
+                aria-label="Open page"
+                size="icon-sm"
+                type="submit"
+                variant="default"
+              >
+                <ArrowRight />
+              </InputGroupButton>
             </InputGroupAddon>
           </InputGroup>
         )}

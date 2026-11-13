@@ -462,7 +462,10 @@ export const createWindow = (sessionId: string = crypto.randomUUID()) => {
     wasFullScreenBeforeWeb: false,
   });
   trackTabLifecycle(mainWindow);
-  installSystemWindow(mainWindow, () => getBrowserState(mainWindow).tabMetadata.size);
+  installSystemWindow(
+    mainWindow,
+    () => getBrowserState(mainWindow).tabMetadata.size,
+  );
 
   const notifyFullScreenChanged = () => {
     if (!mainWindow.webContents.isDestroyed()) {
@@ -502,7 +505,10 @@ export const createWindow = (sessionId: string = crypto.randomUUID()) => {
       { ...bounds, isMaximized: mainWindow.isMaximized() },
       sessionId,
     );
-    setWindowOpen(sessionId, isSystemQuitting() || getBrowserWindows().length === 1);
+    setWindowOpen(
+      sessionId,
+      isSystemQuitting() || getBrowserWindows().length === 1,
+    );
   });
   mainWindow.on("enter-full-screen", notifyFullScreenChanged);
   mainWindow.on("leave-full-screen", notifyFullScreenChanged);

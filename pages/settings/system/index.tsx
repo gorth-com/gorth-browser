@@ -114,17 +114,15 @@ export function SettingsSectionPage(
     );
   }
   const runProxy = () => {
-    void window.electronAPI.system
-      .openProxySettings()
-      .catch((error: unknown) =>
-        toast.add({
-          title:
-            error instanceof Error
-              ? error.message
-              : "Could not open proxy settings.",
-          type: "error",
-        }),
-      );
+    void window.electronAPI.system.openProxySettings().catch((error: unknown) =>
+      toast.add({
+        title:
+          error instanceof Error
+            ? error.message
+            : "Could not open proxy settings.",
+        type: "error",
+      }),
+    );
   };
   const mode =
     memoryModes.find((item) => item.minutes === props.sleepAfterMinutes)

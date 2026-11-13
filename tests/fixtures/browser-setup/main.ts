@@ -161,7 +161,9 @@ void (async () => {
     await run(
       "document.querySelector('[aria-labelledby=sidebar-collapse-switch-label]')?.click()",
     );
-    await wait("window.appearanceState.collapsible && window.appearanceState.collapseMode === 'none'");
+    await wait(
+      "window.appearanceState.collapsible && window.appearanceState.collapseMode === 'none'",
+    );
     await run(
       "document.querySelector('[aria-labelledby=vertical-tabs-label]')?.click()",
     );

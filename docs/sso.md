@@ -14,15 +14,15 @@ Electron main.requestAuth()
 
 ## Environment
 
-| Context | Variable | Local value |
-| --- | --- | --- |
-| Desktop renderer/main | VITE_PUBLIC_APP_URL | http://localhost:5501 |
-| Desktop auth backend | VITE_PUBLIC_AUTH_URL | http://localhost:5503 |
-| Native SDK client ID | VITE_PUBLIC_OAUTH_CLIENT_ID | gorth-browser |
-| Website SSO origin | NEXT_PUBLIC_AUTH_URL | http://localhost:3000 |
-| Website OAuth client ID | NEXT_PUBLIC_OAUTH_CLIENT_ID | gorth-browser-website |
-| Website app origin | NEXT_PUBLIC_APP_URL | http://localhost:5503 |
-| Website private secret | NEXT_SESSION_SECRET | Existing secret value; never expose it |
+| Context                 | Variable                    | Local value                            |
+| ----------------------- | --------------------------- | -------------------------------------- |
+| Desktop renderer/main   | VITE_PUBLIC_APP_URL         | http://localhost:5501                  |
+| Desktop auth backend    | VITE_PUBLIC_AUTH_URL        | http://localhost:5503                  |
+| Native SDK client ID    | VITE_PUBLIC_OAUTH_CLIENT_ID | gorth-browser                          |
+| Website SSO origin      | NEXT_PUBLIC_AUTH_URL        | http://localhost:3000                  |
+| Website OAuth client ID | NEXT_PUBLIC_OAUTH_CLIENT_ID | gorth-browser-website                  |
+| Website app origin      | NEXT_PUBLIC_APP_URL         | http://localhost:5503                  |
+| Website private secret  | NEXT_SESSION_SECRET         | Existing secret value; never expose it |
 
 There are no old SSO_* or VITE_APP_URL aliases. Keep the existing website secret when renaming NEXT_AUTH_SECRET to NEXT_SESSION_SECRET, because OAuth account tokens were encrypted with it. Configure production origins with HTTPS. The website must be running when signing in or verifying a native session.
 

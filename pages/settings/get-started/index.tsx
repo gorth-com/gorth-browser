@@ -145,7 +145,7 @@ export function SettingsSectionPage({
   return (
     <Wrapper>
       <div className="flex flex-col gap-6">
-        <PageHeading icon={Rocket} title="Get started" />
+        <PageHeading icon={Rocket} title="General" />
         <Card className="gap-0 overflow-hidden py-0">
           <div className="flex flex-wrap items-center gap-4 p-4">
             <Icon className="size-6 shrink-0" />

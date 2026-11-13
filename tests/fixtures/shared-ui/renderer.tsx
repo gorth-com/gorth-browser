@@ -29,8 +29,16 @@ const queryClient = new QueryClient();
 Object.assign(window, {
   electronAPI: {
     networkProxy: {
-      get: async () => ({ mode: "system", host: "", port: 8080, hasCredentials: false }),
-      save: async (input: { settings: object }) => ({ ...input.settings, hasCredentials: false }),
+      get: async () => ({
+        mode: "system",
+        host: "",
+        port: 8080,
+        hasCredentials: false,
+      }),
+      save: async (input: { settings: object }) => ({
+        ...input.settings,
+        hasCredentials: false,
+      }),
       route: async () => "DIRECT",
     },
     setup: {

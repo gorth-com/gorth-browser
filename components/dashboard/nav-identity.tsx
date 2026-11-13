@@ -11,7 +11,13 @@ import { formatUserInitials } from "@gorth-io/primitive/utils/formatter";
 import type { UserProps } from "@gorth-io/primitive/utils/interface";
 
 // Mirror Primitive's identity presentation without importing its Next.js module.
-export function NavAvatar({ user, icon: Icon }: { user: UserProps; icon?: LucideIcon }) {
+export function NavAvatar({
+  user,
+  icon: Icon,
+}: {
+  user: UserProps;
+  icon?: LucideIcon;
+}) {
   return (
     <Avatar className="size-9 shrink-0 cursor-default">
       <AvatarImage src={user.avatar || undefined} alt={user.name} />
@@ -44,7 +50,13 @@ export function NavName({ user }: { user: UserProps }) {
     </div>
   );
 }
-export function NavIdentity({ user, icon }: { user: UserProps; icon?: LucideIcon }) {
+export function NavIdentity({
+  user,
+  icon,
+}: {
+  user: UserProps;
+  icon?: LucideIcon;
+}) {
   return (
     <div className="flex min-w-0 flex-1 items-center gap-2">
       <NavAvatar user={user} icon={icon} />

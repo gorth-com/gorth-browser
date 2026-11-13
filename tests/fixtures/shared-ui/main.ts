@@ -225,10 +225,24 @@ void (async () => {
       "window.sidebarFixture.calls.filter(value => value.startsWith('confirm:'))",
     );
     await run("document.querySelector('[aria-label=\"Proxy\"]').click()");
-    await wait(async () => !!(await run("document.querySelector('button[type=submit]:not(:disabled)')")));
-    result.proxySystemDisabled = await run("document.querySelector('[aria-label=\"Proxy address\"]').disabled");
-    await run("Array.from(document.querySelectorAll('label')).find(el => el.textContent.trim()==='HTTP').click()");
-    await wait(async () => !!(await run("!document.querySelector('[aria-label=\"Proxy address\"]').disabled && !document.querySelector('[aria-label=\"Proxy password\"]').disabled")));
+    await wait(
+      async () =>
+        !!(await run(
+          "document.querySelector('button[type=submit]:not(:disabled)')",
+        )),
+    );
+    result.proxySystemDisabled = await run(
+      "document.querySelector('[aria-label=\"Proxy address\"]').disabled",
+    );
+    await run(
+      "Array.from(document.querySelectorAll('label')).find(el => el.textContent.trim()==='HTTP').click()",
+    );
+    await wait(
+      async () =>
+        !!(await run(
+          "!document.querySelector('[aria-label=\"Proxy address\"]').disabled && !document.querySelector('[aria-label=\"Proxy password\"]').disabled",
+        )),
+    );
     result.proxyHttpEnabled = true;
   } catch (error) {
     errors.push(String(error));

@@ -59,7 +59,7 @@ export const settingsPageDefinitions = {
     url: "gorth://settings/profile",
   },
   "settings/get-started": {
-    title: "Get started",
+    title: "General",
     url: "gorth://settings/get-started",
   },
   "settings/appearance": {
@@ -124,14 +124,8 @@ export const internalPageDefinitions = {
 
 export const settingsPagesFirst = [
   {
-    id: "settings/profile",
-    title: "Profile",
-    icon: UserRound,
-    description: "Manage your Gorth account.",
-  },
-  {
     id: "settings/get-started",
-    title: "Get started",
+    title: "General",
     icon: Rocket,
     description: "Choose how you start browsing.",
   },
@@ -152,6 +146,12 @@ export const settingsPagesFirst = [
     title: "Shortcuts",
     icon: Keyboard,
     description: "Customize keyboard shortcuts.",
+  },
+  {
+    id: "settings/profile",
+    title: "Profile",
+    icon: UserRound,
+    description: "Manage your Gorth account.",
   },
   {
     id: "settings/shields",
@@ -198,7 +198,12 @@ export const settingsPagesFirst = [
 ] as const;
 
 export const settingsPagesSecond = [
-  { id: "settings/proxy", title: "Proxy", icon: Network, description: "Configure the app network proxy." },
+  {
+    id: "settings/proxy",
+    title: "Proxy",
+    icon: Network,
+    description: "Configure the app network proxy.",
+  },
   {
     id: "settings/autofill",
     title: "Autofill and passwords",

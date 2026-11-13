@@ -166,7 +166,8 @@ function ToastSurface({ position }: { position: ToastPosition }) {
               right: "auto",
               height: "auto",
               transform: "none",
-              transition: "transform 200ms cubic-bezier(0.22,1,0.36,1), opacity 200ms, height 200ms",
+              transition:
+                "transform 200ms cubic-bezier(0.22,1,0.36,1), opacity 200ms, height 200ms",
             }}
           >
             <ToastContent className="duration-200" style={{ opacity: 1 }}>

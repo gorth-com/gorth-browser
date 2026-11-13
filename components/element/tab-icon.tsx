@@ -1,5 +1,9 @@
 import { internalIcons } from "@/utils/constant";
-import { Globe2, LoaderCircle, Settings } from "@gorth-io/primitive/cores/lucide";
+import {
+  Globe2,
+  LoaderCircle,
+  Settings,
+} from "@gorth-io/primitive/cores/lucide";
 import type { BrowserInternalPage } from "@/lib/browser/internal-pages";
 
 function TabIcon({

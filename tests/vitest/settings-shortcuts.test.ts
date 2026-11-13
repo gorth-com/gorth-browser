@@ -8,9 +8,16 @@ it("registers Shortcuts after Content in the settings sidebar", () => {
   const content = pages.indexOf("settings/content");
   expect(pages[content - 1]).toBe("settings/appearance");
   expect(pages[content + 1]).toBe("settings/shortcuts");
-  expect(parseInternalPage("gorth://settings/shortcuts")).toBe("settings/shortcuts");
+  expect(parseInternalPage("gorth://settings/shortcuts")).toBe(
+    "settings/shortcuts",
+  );
 });
 it("hides rather than removes the feature-block shortcut button", () => {
-  const source = readFileSync(new URL("../../layouts/feature-block.tsx", import.meta.url), "utf8");
-  expect(source).toContain('className={page === "shortcuts" ? "hidden" : undefined}');
+  const source = readFileSync(
+    new URL("../../layouts/feature-block.tsx", import.meta.url),
+    "utf8",
+  );
+  expect(source).toContain(
+    'className={page === "shortcuts" ? "hidden" : undefined}',
+  );
 });

@@ -1,5 +1,10 @@
 import path from "node:path";
-import { initializeSystemStartup, quitBrowserForShutdown, registerSystemIpc, startSystemPowerMonitor } from "@/main/services/system";
+import {
+  initializeSystemStartup,
+  quitBrowserForShutdown,
+  registerSystemIpc,
+  startSystemPowerMonitor,
+} from "@/main/services/system";
 import { registerFolderIpc } from "@/main/services/folders";
 import { initializeNetworkProxy } from "@/main/services/proxy";
 import { getSetupPreferences } from "@/main/services/browser-setup";
@@ -77,7 +82,10 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-installDevelopmentLifecycle(MAIN_WINDOW_VITE_DEV_SERVER_URL, quitBrowserForShutdown);
+installDevelopmentLifecycle(
+  MAIN_WINDOW_VITE_DEV_SERVER_URL,
+  quitBrowserForShutdown,
+);
 
 if (started) {
   app.quit();
@@ -185,9 +193,10 @@ app
       else sendAppAction(id);
     });
     installApplicationMenu();
-    const windowIds = getSetupPreferences().startup === "restore"
-      ? getRestoredWindowIds()
-      : [MAIN_WINDOW_ID];
+    const windowIds =
+      getSetupPreferences().startup === "restore"
+        ? getRestoredWindowIds()
+        : [MAIN_WINDOW_ID];
     for (const id of windowIds) createWindow(id);
     try {
       await prepareAuthProtocol(authScheme, receiveBrowserLink);

@@ -38,16 +38,16 @@ Không chấm “phần trăm giống Flow”, độ an toàn hay tốc độ kh
 
 ## 3. Stack và ranh giới kiến trúc
 
-| Hạng mục | Gorth hiện tại | Flow snapshot |
-| --- | --- | --- |
-| Tên/version | Gorth Browser `0.0.1` | Flow `0.12.0` |
-| Electron khai báo | Stock Electron `44.6.0` | Castlabs Electron `v41.1.1+wvcus` |
-| Build | Electron Forge + Vite; cấu hình renderer/main/preload riêng | Electron Vite + Electron Builder |
-| UI | React, Tailwind, Base UI/shadcn, custom providers | React, Tailwind, Base UI/shadcn, Motion, portal components |
-| DB | better-sqlite3 + Drizzle; phần lớn dữ liệu browser trong một DB | SQLite + Drizzle cho tabs/history/pins; datastore riêng cho settings/profiles/spaces và dữ liệu khác |
-| Renderer → main | Preload semantic API; một phần chuyển sang tRPC qua IPC | Typed bridge + IPC/controller/event |
-| Local HTTP service | Nitro cho callback/profile; dev qua Unix socket/named pipe, production HTTP loopback | Không có backend ứng dụng tương đương trong kiến trúc được mô tả |
-| Website surface | Native `WebContentsView` sandboxed | Native `WebContentsView` + LayerManager |
+| Hạng mục           | Gorth hiện tại                                                                       | Flow snapshot                                                                                        |
+| ------------------ | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Tên/version        | Gorth Browser `0.0.1`                                                                | Flow `0.12.0`                                                                                        |
+| Electron khai báo  | Stock Electron `44.6.0`                                                              | Castlabs Electron `v41.1.1+wvcus`                                                                    |
+| Build              | Electron Forge + Vite; cấu hình renderer/main/preload riêng                          | Electron Vite + Electron Builder                                                                     |
+| UI                 | React, Tailwind, Base UI/shadcn, custom providers                                    | React, Tailwind, Base UI/shadcn, Motion, portal components                                           |
+| DB                 | better-sqlite3 + Drizzle; phần lớn dữ liệu browser trong một DB                      | SQLite + Drizzle cho tabs/history/pins; datastore riêng cho settings/profiles/spaces và dữ liệu khác |
+| Renderer → main    | Preload semantic API; một phần chuyển sang tRPC qua IPC                              | Typed bridge + IPC/controller/event                                                                  |
+| Local HTTP service | Nitro cho callback/profile; dev qua Unix socket/named pipe, production HTTP loopback | Không có backend ứng dụng tương đương trong kiến trúc được mô tả                                     |
+| Website surface    | Native `WebContentsView` sandboxed                                                   | Native `WebContentsView` + LayerManager                                                              |
 
 Nguồn: [Gorth package.json](../package.json), [Forge config](../forge.config.ts), [Flow package.json](../packages/flow-browser/package.json), [Flow AGENTS](../packages/flow-browser/AGENTS.md), [Flow DB](../packages/flow-browser/src/main/saving/db/index.ts).
 
@@ -74,24 +74,24 @@ Hướng nên học: xác định main là nguồn sự thật cho các thao tá
 
 ### 4.1. Tabs, cửa sổ và tổ chức phiên
 
-| Tính năng | Gorth | Flow | Nhận xét |
-| --- | --- | --- | --- |
-| Nhiều tab/cửa sổ | Có | Có | Gorth có session ID riêng cho từng cửa sổ. |
-| Khôi phục phiên/bounds | Có | Có | Gorth lưu tabs/groups/active/split/preferences/bounds và phục hồi cửa sổ đánh dấu mở. |
-| Recently closed | Có, một phần | Có | Gorth giữ tối đa 25 entry/cửa sổ trong DB; Flow tối đa 10 entry runtime và có phục hồi group membership. |
-| Horizontal/vertical tabs | Có, chuyển đổi | Sidebar là UI chính | Flow README còn liệt kê topbar là upcoming; không coi là parity đã hoàn tất. |
-| Collapse vertical sidebar | Có | Có UI sidebar riêng | Gorth có trạng thái chỉ icon; không phải browser profile isolation. |
-| Pinned/mute/middle-click close | Có | Có pinned/mute | Gorth đã có compact pins, mute và đóng bằng chuột giữa. |
-| Tab overflow/tab list | Có | Có tổ chức sidebar/omnibox | Gorth có scroll arrows và menu danh sách tab. |
-| Drag reorder/pin/unpin | Chưa thấy | Có | Flow có drag source/drop targets và persistence; Gorth chỉ scroll/select/pin qua action. |
-| Normal group có tên | Có | Không thấy mô hình named normal group tương đương | Gorth có nhóm và quản lý từ Bookmarks. |
-| Split | Có, đúng hai website tab | Một phần | Flow có model split nhưng layout còn `TODO`. Gorth chia đôi cố định, chưa có resize divider. |
-| Glance | Có, hai website tab | Có model/layout, bị cờ tắt | Không đánh dấu glance Flow là mặc định sử dụng được. |
-| Sleeping | Có, hủy/recreate view | Có, hủy/recreate view | Cả hai không giữ nguyên DOM/JS heap sau sleep. |
-| Archive khôi phục riêng | Có | Một phần khác mô hình | Gorth lưu `archived_tab`; timer Flow gọi `tab.destroy()`, recently closed là runtime có giới hạn. |
-| Browser Profiles | Chưa có | Có | Gorth hardcode `PROFILE_ID = "default"`; SSO profile không phải browser profile. |
-| Spaces/workspaces | Placeholder trong native menu | Có | Gorth “Default Space” là item disabled; không có CRUD/model Spaces. |
-| Incognito | Chưa có | Có | Flow tạo ephemeral profile/session và dọn khi cửa sổ cuối đóng. |
+| Tính năng                      | Gorth                         | Flow                                              | Nhận xét                                                                                                 |
+| ------------------------------ | ----------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Nhiều tab/cửa sổ               | Có                            | Có                                                | Gorth có session ID riêng cho từng cửa sổ.                                                               |
+| Khôi phục phiên/bounds         | Có                            | Có                                                | Gorth lưu tabs/groups/active/split/preferences/bounds và phục hồi cửa sổ đánh dấu mở.                    |
+| Recently closed                | Có, một phần                  | Có                                                | Gorth giữ tối đa 25 entry/cửa sổ trong DB; Flow tối đa 10 entry runtime và có phục hồi group membership. |
+| Horizontal/vertical tabs       | Có, chuyển đổi                | Sidebar là UI chính                               | Flow README còn liệt kê topbar là upcoming; không coi là parity đã hoàn tất.                             |
+| Collapse vertical sidebar      | Có                            | Có UI sidebar riêng                               | Gorth có trạng thái chỉ icon; không phải browser profile isolation.                                      |
+| Pinned/mute/middle-click close | Có                            | Có pinned/mute                                    | Gorth đã có compact pins, mute và đóng bằng chuột giữa.                                                  |
+| Tab overflow/tab list          | Có                            | Có tổ chức sidebar/omnibox                        | Gorth có scroll arrows và menu danh sách tab.                                                            |
+| Drag reorder/pin/unpin         | Chưa thấy                     | Có                                                | Flow có drag source/drop targets và persistence; Gorth chỉ scroll/select/pin qua action.                 |
+| Normal group có tên            | Có                            | Không thấy mô hình named normal group tương đương | Gorth có nhóm và quản lý từ Bookmarks.                                                                   |
+| Split                          | Có, đúng hai website tab      | Một phần                                          | Flow có model split nhưng layout còn `TODO`. Gorth chia đôi cố định, chưa có resize divider.             |
+| Glance                         | Có, hai website tab           | Có model/layout, bị cờ tắt                        | Không đánh dấu glance Flow là mặc định sử dụng được.                                                     |
+| Sleeping                       | Có, hủy/recreate view         | Có, hủy/recreate view                             | Cả hai không giữ nguyên DOM/JS heap sau sleep.                                                           |
+| Archive khôi phục riêng        | Có                            | Một phần khác mô hình                             | Gorth lưu `archived_tab`; timer Flow gọi `tab.destroy()`, recently closed là runtime có giới hạn.        |
+| Browser Profiles               | Chưa có                       | Có                                                | Gorth hardcode `PROFILE_ID = "default"`; SSO profile không phải browser profile.                         |
+| Spaces/workspaces              | Placeholder trong native menu | Có                                                | Gorth “Default Space” là item disabled; không có CRUD/model Spaces.                                      |
+| Incognito                      | Chưa có                       | Có                                                | Flow tạo ephemeral profile/session và dọn khi cửa sổ cuối đóng.                                          |
 
 Nguồn Gorth: [Application](../app/index.tsx), [tabs UI](../components/element/browser-tabs.tsx), [vertical tabs](../layouts/vertical-tabs.tsx), [database](../services/browser-database.ts), [lifecycle](../main/services/tab-lifecycle.ts), [webview bounds](../main/windows/webview.ts), [application menu](../main/ipc/application-menu.ts).
 
@@ -99,23 +99,23 @@ Nguồn Flow: [tabs controller](../packages/flow-browser/src/main/controllers/ta
 
 ### 4.2. Navigation, tìm kiếm và nội dung web
 
-| Tính năng | Gorth | Flow | Nhận xét |
-| --- | --- | --- | --- |
-| Back/forward/reload/stop | Có | Có | Gorth đổi reload thành X khi loading. |
-| Address bar short/full URL | Có | Có omnibox riêng | Gorth có focus/select-all và phân màu URL. |
-| Omnibox autocomplete | Chưa có engine tương đương | Có | Flow kết hợp history, open tabs, actions, remote search và zero-suggest. |
-| Bangs | Chưa có | Có | Flow có dữ liệu bangs và xử lý trong verbatim suggestor. |
-| Chọn search engine | Trang thông tin, chưa có selector | Một phần | Snapshot Flow có abstraction nhưng resolver omnibox hiện trả Google; không kết luận hỗ trợ tùy ý mọi engine. |
-| Link `target=_blank` | Có, một phần | Có domain orchestration | Gorth gửi URL thành tab mới và deny native popup; chưa bảo toàn mọi window features/POST/opener. |
-| Find in page | Có, một phần | Có native implementation | Gorth quét text DOM bằng injected JS, Flow gọi `webContents.findInPage`. |
-| HTML fullscreen | Có | Có | Gorth theo dõi tab fullscreen và trạng thái OS trước khi vào fullscreen web. |
-| Automatic PiP khi đổi tab | Chưa thấy | Có code | Gorth chỉ bảo vệ tab PiP khỏi sleep; chưa có orchestration tương đương. |
-| PDF viewer riêng | Chưa thấy | Có | Gorth có thể phụ thuộc Chromium mặc định; chưa xác nhận runtime PDF. |
-| Widevine/DRM integration | Chưa có | Có build nền Castlabs | Không đồng nghĩa mọi dịch vụ DRM chạy được; chưa thử playback. |
-| WebAuthn/passkeys integration | Chưa có module riêng | Có | Không đánh đồng “chưa có module” với mọi WebAuthn Chromium đều không hoạt động. |
-| HTTP/proxy Basic Auth UI | Chưa thấy handler riêng | Có | Flow có `app.on("login")` và prompt queue. |
-| Error/offline page | Có | Có | Gorth có Retry, mã lỗi và Offline rocket; Flow có games routes riêng. |
-| Save image as/content menu | Có | Có | Gorth đã phân biệt tab/titlebar/address/web menu và có thao tác image/link/edit/devtools. |
+| Tính năng                     | Gorth                             | Flow                     | Nhận xét                                                                                                     |
+| ----------------------------- | --------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| Back/forward/reload/stop      | Có                                | Có                       | Gorth đổi reload thành X khi loading.                                                                        |
+| Address bar short/full URL    | Có                                | Có omnibox riêng         | Gorth có focus/select-all và phân màu URL.                                                                   |
+| Omnibox autocomplete          | Chưa có engine tương đương        | Có                       | Flow kết hợp history, open tabs, actions, remote search và zero-suggest.                                     |
+| Bangs                         | Chưa có                           | Có                       | Flow có dữ liệu bangs và xử lý trong verbatim suggestor.                                                     |
+| Chọn search engine            | Trang thông tin, chưa có selector | Một phần                 | Snapshot Flow có abstraction nhưng resolver omnibox hiện trả Google; không kết luận hỗ trợ tùy ý mọi engine. |
+| Link `target=_blank`          | Có, một phần                      | Có domain orchestration  | Gorth gửi URL thành tab mới và deny native popup; chưa bảo toàn mọi window features/POST/opener.             |
+| Find in page                  | Có, một phần                      | Có native implementation | Gorth quét text DOM bằng injected JS, Flow gọi `webContents.findInPage`.                                     |
+| HTML fullscreen               | Có                                | Có                       | Gorth theo dõi tab fullscreen và trạng thái OS trước khi vào fullscreen web.                                 |
+| Automatic PiP khi đổi tab     | Chưa thấy                         | Có code                  | Gorth chỉ bảo vệ tab PiP khỏi sleep; chưa có orchestration tương đương.                                      |
+| PDF viewer riêng              | Chưa thấy                         | Có                       | Gorth có thể phụ thuộc Chromium mặc định; chưa xác nhận runtime PDF.                                         |
+| Widevine/DRM integration      | Chưa có                           | Có build nền Castlabs    | Không đồng nghĩa mọi dịch vụ DRM chạy được; chưa thử playback.                                               |
+| WebAuthn/passkeys integration | Chưa có module riêng              | Có                       | Không đánh đồng “chưa có module” với mọi WebAuthn Chromium đều không hoạt động.                              |
+| HTTP/proxy Basic Auth UI      | Chưa thấy handler riêng           | Có                       | Flow có `app.on("login")` và prompt queue.                                                                   |
+| Error/offline page            | Có                                | Có                       | Gorth có Retry, mã lỗi và Offline rocket; Flow có games routes riêng.                                        |
+| Save image as/content menu    | Có                                | Có                       | Gorth đã phân biệt tab/titlebar/address/web menu và có thao tác image/link/edit/devtools.                    |
 
 Nguồn Gorth: [AddressBar](../layouts/address-bar.tsx), [navigation IPC/Find](../main/ipc/browser.ts), [native views/events](../main/windows/capital.ts), [Find UI](../components/element/find-in-page.tsx), [context menu](../main/ipc/context-menu.ts), [error page](../pages/error/index.tsx), [search settings](../pages/settings/search/index.tsx).
 
@@ -123,25 +123,25 @@ Nguồn Flow: [omnibox suggestor](../packages/flow-browser/src/renderer/src/lib/
 
 ### 4.3. Data, bảo vệ, extensions và hệ điều hành
 
-| Tính năng | Gorth | Flow | Nhận xét |
-| --- | --- | --- | --- |
-| History | Có | Có | Flow có URLs/visits, visitCount/typedCount; Gorth lưu visit item đơn giản và load tối đa 2.000 item. |
-| Bookmarks | Có | Chưa thấy manager tương đương | Flow pins/spaces không phải bookmark manager với cùng mô hình. |
-| Download manager | Có | Chưa thấy manager tương đương | Flow có `downloadURL` từ context menu, không phải UI/persistence/pause/retry manager. |
-| Ad/tracker blocker | Có | Có | Cả hai dùng Ghostery; không phải Brave Rust engine. |
-| Site exceptions/custom filters | Có | Chưa thấy UI/contract tương đương trong module blocker | Gorth có cache, bundled engine, update lists và custom filters. |
-| Permission manager theo site | Chưa có cho website thường | Một phần, chính sách quá rộng | Flow prompt `openExternal`, còn phần lớn request khác `callback(true)`. |
-| Cookies/site data management UI | Một phần thông tin | Chưa xác nhận đầy đủ | Gorth lấy cookie count, chưa có manager xóa/quản lý quyền site. |
-| Chrome Web Store extensions | Placeholder | Có | Flow có session integration, install prompt, manager, service worker và popup. |
-| Gorth SSO | Có | Không thấy tích hợp tương đương | Gorth dùng OAuth/OIDC/PKCE, main giữ token; không cần host Better Auth server trong renderer. |
-| Browser cloud sync | Placeholder | Chưa xác nhận có sync tương đương | Đăng nhập SSO không tạo ra sync tabs/bookmarks/settings. |
-| Custom shortcuts | Có | Có | Gorth có list/edit/reset, chống trùng và bảo vệ phím native. |
-| Native app menu | Có | Có | Gorth có File/Edit/View/Tabs/Spaces/Window; Spaces chưa hoạt động, chưa có Help submenu riêng. |
-| About OS → Help | Có | Có UI About/settings riêng | Gorth chuyển đến `gorth://settings/help`. |
-| OS default browser/URL open | Chưa có đầy đủ | Có | Gorth second-instance chỉ focus cửa sổ, chưa xử lý URL từ OS thành tab. |
-| macOS Handoff | Chưa có | Có code | Chưa test hoạt động trên thiết bị thật. |
-| App auto-update | Chưa có | Có | `publish` Forge không tự tạo updater runtime. |
-| Packaging/signing/notarization | Có packaging, chưa thấy signing/notarization config | Có cấu hình release chi tiết | Không khẳng định đã ký/phát hành thành công chỉ từ config. |
+| Tính năng                       | Gorth                                               | Flow                                                   | Nhận xét                                                                                             |
+| ------------------------------- | --------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| History                         | Có                                                  | Có                                                     | Flow có URLs/visits, visitCount/typedCount; Gorth lưu visit item đơn giản và load tối đa 2.000 item. |
+| Bookmarks                       | Có                                                  | Chưa thấy manager tương đương                          | Flow pins/spaces không phải bookmark manager với cùng mô hình.                                       |
+| Download manager                | Có                                                  | Chưa thấy manager tương đương                          | Flow có `downloadURL` từ context menu, không phải UI/persistence/pause/retry manager.                |
+| Ad/tracker blocker              | Có                                                  | Có                                                     | Cả hai dùng Ghostery; không phải Brave Rust engine.                                                  |
+| Site exceptions/custom filters  | Có                                                  | Chưa thấy UI/contract tương đương trong module blocker | Gorth có cache, bundled engine, update lists và custom filters.                                      |
+| Permission manager theo site    | Chưa có cho website thường                          | Một phần, chính sách quá rộng                          | Flow prompt `openExternal`, còn phần lớn request khác `callback(true)`.                              |
+| Cookies/site data management UI | Một phần thông tin                                  | Chưa xác nhận đầy đủ                                   | Gorth lấy cookie count, chưa có manager xóa/quản lý quyền site.                                      |
+| Chrome Web Store extensions     | Placeholder                                         | Có                                                     | Flow có session integration, install prompt, manager, service worker và popup.                       |
+| Gorth SSO                       | Có                                                  | Không thấy tích hợp tương đương                        | Gorth dùng OAuth/OIDC/PKCE, main giữ token; không cần host Better Auth server trong renderer.        |
+| Browser cloud sync              | Placeholder                                         | Chưa xác nhận có sync tương đương                      | Đăng nhập SSO không tạo ra sync tabs/bookmarks/settings.                                             |
+| Custom shortcuts                | Có                                                  | Có                                                     | Gorth có list/edit/reset, chống trùng và bảo vệ phím native.                                         |
+| Native app menu                 | Có                                                  | Có                                                     | Gorth có File/Edit/View/Tabs/Spaces/Window; Spaces chưa hoạt động, chưa có Help submenu riêng.       |
+| About OS → Help                 | Có                                                  | Có UI About/settings riêng                             | Gorth chuyển đến `gorth://settings/help`.                                                            |
+| OS default browser/URL open     | Chưa có đầy đủ                                      | Có                                                     | Gorth second-instance chỉ focus cửa sổ, chưa xử lý URL từ OS thành tab.                              |
+| macOS Handoff                   | Chưa có                                             | Có code                                                | Chưa test hoạt động trên thiết bị thật.                                                              |
+| App auto-update                 | Chưa có                                             | Có                                                     | `publish` Forge không tự tạo updater runtime.                                                        |
+| Packaging/signing/notarization  | Có packaging, chưa thấy signing/notarization config | Có cấu hình release chi tiết                           | Không khẳng định đã ký/phát hành thành công chỉ từ config.                                           |
 
 Nguồn Gorth: [DB/schema](../database/schema.ts), [DB operations](../services/browser-database.ts), [downloads](../main/services/downloads.ts), [downloads UI](../pages/downloads/index.tsx), [blocker](../main/services/content-blocker.ts), [Shields settings](../pages/settings/shields/index.tsx), [extensions placeholder](../pages/extensions/index.tsx), [SSO](../lib/auth/gorth.ts), [vault](../lib/auth/vault.ts), [shortcuts](../main/ipc/shortcuts.ts), [Forge](../forge.config.ts).
 
@@ -151,19 +151,19 @@ Nguồn Flow: [DB schema](../packages/flow-browser/src/main/saving/db/schema.ts)
 
 Không nên dùng việc sidebar có đủ mục làm bằng chứng browser đã có đủ tính năng tương ứng.
 
-| Nhóm trang | Trạng thái thực tế |
-| --- | --- |
-| `settings/appearance` | Có theme light/dark/system, vertical tabs, logo titlebar, vị trí sidebar và toast settings. |
-| `settings/system` | Có memory saver, sleep timeout, archive timeout, mở Archive và smooth scrolling cần restart. |
-| `settings/shields` | Có trạng thái engine, bật/tắt, exceptions, custom filters và cập nhật lists. |
-| `settings/downloads` | Có chọn thư mục, tùy chọn hỏi nơi lưu, thao tác bridge thực tế. |
-| `settings/profile` | Có Gorth account/SSO UI, chưa có nhiều browser profiles. |
-| `settings/get-started` | AccountCard và mô tả startup; chưa có wizard/selector startup behavior tương đương Flow. |
-| `settings/search` | Chỉ mô tả hiện dùng Google; chưa chỉnh được engine. |
-| `settings/help`, `help`, `welcome`, `whats-new` | Có trang nội dung/đường dẫn; chưa có updater hay onboarding state machine chỉ vì tồn tại các trang này. |
-| `extensions`, `settings/extensions` | Placeholder; chưa cài, bật/tắt hay gỡ extension được. |
-| `settings/content`, `privacy`, `web3`, `leo`, `sync`, `autofill`, `languages`, `accessibility`, `reset` | Placeholder với thông báo preferences chưa có. |
-| `flags` | Hai cờ memory saver/smooth scrolling có xử lý; không phải bảng flags Chromium đầy đủ. |
+| Nhóm trang                                                                                              | Trạng thái thực tế                                                                                      |
+| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `settings/appearance`                                                                                   | Có theme light/dark/system, vertical tabs, logo titlebar, vị trí sidebar và toast settings.             |
+| `settings/system`                                                                                       | Có memory saver, sleep timeout, archive timeout, mở Archive và smooth scrolling cần restart.            |
+| `settings/shields`                                                                                      | Có trạng thái engine, bật/tắt, exceptions, custom filters và cập nhật lists.                            |
+| `settings/downloads`                                                                                    | Có chọn thư mục, tùy chọn hỏi nơi lưu, thao tác bridge thực tế.                                         |
+| `settings/profile`                                                                                      | Có Gorth account/SSO UI, chưa có nhiều browser profiles.                                                |
+| `settings/get-started`                                                                                  | AccountCard và mô tả startup; chưa có wizard/selector startup behavior tương đương Flow.                |
+| `settings/search`                                                                                       | Chỉ mô tả hiện dùng Google; chưa chỉnh được engine.                                                     |
+| `settings/help`, `help`, `welcome`, `whats-new`                                                         | Có trang nội dung/đường dẫn; chưa có updater hay onboarding state machine chỉ vì tồn tại các trang này. |
+| `extensions`, `settings/extensions`                                                                     | Placeholder; chưa cài, bật/tắt hay gỡ extension được.                                                   |
+| `settings/content`, `privacy`, `web3`, `leo`, `sync`, `autofill`, `languages`, `accessibility`, `reset` | Placeholder với thông báo preferences chưa có.                                                          |
+| `flags`                                                                                                 | Hai cờ memory saver/smooth scrolling có xử lý; không phải bảng flags Chromium đầy đủ.                   |
 
 Nguồn: [settings composition](../pages/settings/index.tsx), [settings pages](../pages/settings), [flags](../pages/flags/index.tsx), [internal routes](../lib/browser/internal-pages.ts).
 
@@ -380,16 +380,16 @@ Flow README công bố GPL-3.0; metadata Gorth khai báo MIT. Khi lấy code/ass
 
 ## 10. Kiểm chứng trong lần audit này
 
-| Kiểm tra | Kết quả |
-| --- | --- |
-| `pnpm exec tsc --noEmit --incremental false` | Pass. |
-| `pnpm lint` | Pass, không có lỗi/warning trong output. |
-| `pnpm test:rpc` | 4/4 pass: session/groups, internal routing, bounded request, trusted renderer URL. |
-| `pnpm test:formatter` | 8/8 pass: architecture và display formatting. |
-| `node scripts/test-shortcuts.mjs` | 5/5 pass: normalization/validation/conflicts/defaults/protected actions. |
-| Bundle `tests/navigation.test.ts` bằng esbuild, chạy `node --test` | 6/6 pass: QUIC retry có giới hạn, cancellation và replacement safety. |
-| Vite production renderer build, output `.vite/audit-verification/renderer` | Pass; 2.716 modules; JS 919,59 kB / gzip 283,62 kB; CSS 214,79 kB / gzip 32,02 kB. |
-| `pnpm test:desktop-packages` | Không chạy được native suite: Electron import cố download binary, `fetch failed`, rồi báo Electron chưa cài đúng. |
+| Kiểm tra                                                                   | Kết quả                                                                                                           |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `pnpm exec tsc --noEmit --incremental false`                               | Pass.                                                                                                             |
+| `pnpm lint`                                                                | Pass, không có lỗi/warning trong output.                                                                          |
+| `pnpm test:rpc`                                                            | 4/4 pass: session/groups, internal routing, bounded request, trusted renderer URL.                                |
+| `pnpm test:formatter`                                                      | 8/8 pass: architecture và display formatting.                                                                     |
+| `node scripts/test-shortcuts.mjs`                                          | 5/5 pass: normalization/validation/conflicts/defaults/protected actions.                                          |
+| Bundle `tests/navigation.test.ts` bằng esbuild, chạy `node --test`         | 6/6 pass: QUIC retry có giới hạn, cancellation và replacement safety.                                             |
+| Vite production renderer build, output `.vite/audit-verification/renderer` | Pass; 2.716 modules; JS 919,59 kB / gzip 283,62 kB; CSS 214,79 kB / gzip 32,02 kB.                                |
+| `pnpm test:desktop-packages`                                               | Không chạy được native suite: Electron import cố download binary, `fetch failed`, rồi báo Electron chưa cài đúng. |
 
 Tổng **23 unit tests pass** trong các bộ kể trên. Test count không đo mức hoàn thiện chức năng hoặc tổng coverage toàn dự án.
 
