@@ -5,8 +5,8 @@ import {
   Info,
   Rocket,
   Sparkles,
-} from "@gorth-io/primitive/cores/lucide";
-import { Button } from "@gorth-io/primitive/custom/button";
+} from "@gorth-com/primitive/cores/lucide";
+import { Button } from "@gorth-com/primitive/custom/button";
 import { AppUpdateCard } from "@/components/element/app-update-card";
 import {
   Card,
@@ -14,7 +14,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@gorth-io/primitive/default/card";
+} from "@gorth-com/primitive/default/card";
 import { type BrowserInternalPage } from "@/lib/browser/internal-pages";
 import { type SpecialPageProps, PageShell } from "@/pages/shared";
 function AboutPage({

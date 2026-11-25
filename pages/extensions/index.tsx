@@ -1,4 +1,4 @@
-import { Puzzle } from "@gorth-io/primitive/cores/lucide";
+import { Puzzle } from "@gorth-com/primitive/cores/lucide";
 import { PageShell, EmptyState } from "@/pages/shared";
 export function ExtensionsPage() {
   return (

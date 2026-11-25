@@ -19,11 +19,13 @@ const database = vi.hoisted(() => ({
   save: vi.fn(),
 }));
 vi.mock("electron", () => ({ app: {}, shell: {} }));
-vi.mock("@/services/browser-database", () => ({
-  readBrowserSetting: database.read,
-  writeBrowserSetting: database.write,
-  loadBrowserSnapshot: database.load,
-  saveBrowserSnapshot: database.save,
+vi.mock("@/models/setting", () => ({
+  rawReadBrowserSetting: database.read,
+  rawWriteBrowserSetting: database.write,
+}));
+vi.mock("@/models/tab", () => ({
+  rawLoadBrowserSnapshot: database.load,
+  rawSaveBrowserSnapshot: database.save,
 }));
 function snapshot(): BrowserSnapshot {
   return {

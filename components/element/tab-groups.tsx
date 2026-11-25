@@ -1,22 +1,22 @@
 import { ErrorFeedback } from "@/components/element/error-feedback";
 import { groupModes } from "@/utils/constant";
 import { useState } from "react";
-import { useForm } from "@gorth-io/primitive/cores/tanstack/form";
+import { useForm } from "@gorth-com/primitive/cores/tanstack/form";
 import {
   Check,
   Folder,
   Pencil,
   Plus,
   Trash2,
-} from "@gorth-io/primitive/cores/lucide";
-import { Button } from "@gorth-io/primitive/custom/button";
-import { Input } from "@gorth-io/primitive/default/input";
+} from "@gorth-com/primitive/cores/lucide";
+import { Button } from "@gorth-com/primitive/custom/button";
+import { Input } from "@gorth-com/primitive/default/input";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@gorth-io/primitive/default/card";
+} from "@gorth-com/primitive/default/card";
 import { TabIcon } from "@/components/element/tab-icon";
 import type { BrowserTabItem } from "@/components/element/browser-tabs";
 import type {

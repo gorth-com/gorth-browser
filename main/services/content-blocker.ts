@@ -13,11 +13,8 @@ import {
 } from "electron";
 import { readFile, writeFile, rename } from "node:fs/promises";
 import path from "node:path";
-import { z } from "@gorth-io/structure/cores/zod";
-import {
-  readBrowserSetting,
-  writeBrowserSetting,
-} from "@/services/browser-database";
+import { z } from "@gorth-com/structure/cores/zod";
+import { rawReadBrowserSetting, rawWriteBrowserSetting } from "@/models/setting"
 import {
   isSiteExcluded,
   normalizeSite,
@@ -256,7 +253,7 @@ export function updateShieldLists() {
       if (stopping) return;
       attachEngine(next);
       status.updatedAt = Date.now();
-      writeBrowserSetting("shieldsUpdatedAt", status.updatedAt);
+      rawWriteBrowserSetting("shieldsUpdatedAt", status.updatedAt);
       status.error = null;
     } catch (error) {
       if (stopping) return;
@@ -275,12 +272,12 @@ export function updateShieldLists() {
 export async function initializeContentBlocker() {
   preferences = {
     ...defaultShieldPreferences,
-    ...readBrowserSetting<Partial<ShieldPreferences>>("shields", {}),
+    ...rawReadBrowserSetting<Partial<ShieldPreferences>>("shields", {}),
   };
   customEngine = preferences.customFilters
     ? ElectronBlocker.parse(preferences.customFilters)
     : undefined;
-  status.updatedAt = readBrowserSetting<number | null>(
+  status.updatedAt = rawReadBrowserSetting<number | null>(
     "shieldsUpdatedAt",
     null,
   );
@@ -333,7 +330,7 @@ export async function initializeContentBlocker() {
     const filters = next.customFilters
       ? ElectronBlocker.parse(next.customFilters)
       : undefined;
-    writeBrowserSetting("shields", next);
+    rawWriteBrowserSetting("shields", next);
     preferences = next;
     customEngine = filters;
     notifyStatus();

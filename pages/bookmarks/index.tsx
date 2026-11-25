@@ -1,7 +1,7 @@
-import { Bookmark } from "@gorth-io/primitive/cores/lucide";
+import { Bookmark } from "@gorth-com/primitive/cores/lucide";
 import type { BrowserBookmark } from "@/components/dashboard/bookmarks";
-import { Button } from "@gorth-io/primitive/custom/button";
-import { Card, CardContent } from "@gorth-io/primitive/default/card";
+import { Button } from "@gorth-com/primitive/custom/button";
+import { Card, CardContent } from "@gorth-com/primitive/default/card";
 import { PageShell, EmptyState, LinkActionsPopover } from "@/pages/shared";
 import {
   TabGroups,

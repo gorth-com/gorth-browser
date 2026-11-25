@@ -10,13 +10,8 @@ import {
 } from "electron";
 import { stat } from "node:fs/promises";
 import path from "node:path";
-import {
-  loadDownloads,
-  saveDownload,
-  deleteDownload,
-  loadDownloadPreferences,
-  saveDownloadPreferences,
-} from "@/services/browser-database";
+import { rawLoadDownloads, rawSaveDownload, rawDeleteDownload } from "@/models/download"
+import { rawLoadDownloadPreferences, rawSaveDownloadPreferences } from "@/models/setting"
 import type { DownloadRecord, DownloadInfo } from "@/lib/browser/downloads";
 import { parseHttpUrl } from "@/utils/schema";
 import { getBrowserWindows } from "@/main/windows/capital";
@@ -123,7 +118,7 @@ function notifyDownloadState(
 }
 
 export function getDownloads(): DownloadInfo[] {
-  return loadDownloads().map((record) => {
+  return rawLoadDownloads().map((record) => {
     const entry = activeDownloads.get(record.id);
     return {
       ...record,
@@ -141,7 +136,7 @@ export function getDownloads(): DownloadInfo[] {
 }
 
 export function getDownloadPreferences() {
-  return loadDownloadPreferences(app.getPath("downloads"));
+  return rawLoadDownloadPreferences(app.getPath("downloads"));
 }
 
 export function installDownloadManager(session: Session) {
@@ -201,7 +196,7 @@ export function installDownloadManager(session: Session) {
       entry.timer = undefined;
       try {
         capture();
-        saveDownload(record);
+        rawSaveDownload(record);
       } catch (error) {
         reportDownloadError(error);
       }
@@ -227,7 +222,7 @@ export function installDownloadManager(session: Session) {
       }
       record.state = state;
       try {
-        saveDownload(record);
+        rawSaveDownload(record);
       } catch (error) {
         reportDownloadError(error);
       }
@@ -250,7 +245,7 @@ export function installDownloadManager(session: Session) {
     activeDownloads.set(record.id, entry);
     item.on("updated", updated);
     item.once("done", done);
-    saveDownload(record);
+    rawSaveDownload(record);
     notifyDownloadsChanged();
     notifyDownloadState("started", record.filename);
   };
@@ -287,7 +282,7 @@ export function shutdownDownloadManager() {
     entry.persist();
     entry.cleanup();
     try {
-      saveDownload({ ...entry.record, state: "interrupted" });
+      rawSaveDownload({ ...entry.record, state: "interrupted" });
     } catch (error) {
       reportDownloadError(error);
     }
@@ -315,7 +310,7 @@ export function controlDownload(
 }
 
 function requireDownload(id: string) {
-  const record = loadDownloads().find((download) => download.id === id);
+  const record = rawLoadDownloads().find((download) => download.id === id);
   if (!record) throw new Error("Download not found.");
   return record;
 }
@@ -365,13 +360,13 @@ export async function openDownload(
 export function removeDownload(id: string) {
   if (activeDownloads.has(id))
     throw new Error("Cancel the download before removing it.");
-  deleteDownload(id);
+  rawDeleteDownload(id);
   notifyDownloadsChanged();
 }
 
 export function clearDownloadHistory() {
-  for (const record of loadDownloads())
-    if (!activeDownloads.has(record.id)) deleteDownload(record.id);
+  for (const record of rawLoadDownloads())
+    if (!activeDownloads.has(record.id)) rawDeleteDownload(record.id);
   notifyDownloadsChanged();
 }
 
@@ -383,7 +378,7 @@ export async function chooseDownloadDirectory(window: BrowserWindow) {
     properties: ["openDirectory", "createDirectory"],
   });
   if (!result.canceled && result.filePaths[0]) {
-    saveDownloadPreferences({
+    rawSaveDownloadPreferences({
       ...preferences,
       directory: path.resolve(result.filePaths[0]),
     });
@@ -393,7 +388,7 @@ export async function chooseDownloadDirectory(window: BrowserWindow) {
 }
 
 export function setAskWhereToSave(askWhereToSave: boolean) {
-  saveDownloadPreferences({ ...getDownloadPreferences(), askWhereToSave });
+  rawSaveDownloadPreferences({ ...getDownloadPreferences(), askWhereToSave });
   notifyDownloadsChanged();
   return getDownloadPreferences();
 }

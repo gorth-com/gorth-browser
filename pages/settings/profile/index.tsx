@@ -1,4 +1,4 @@
-import { UserRound } from "@gorth-io/primitive/cores/lucide";
+import { UserRound } from "@gorth-com/primitive/cores/lucide";
 import { PageHeading } from "@/components/heading";
 import { AccountCard } from "@/components/element/account-card";
 import { Wrapper } from "@/layouts/wrapper";

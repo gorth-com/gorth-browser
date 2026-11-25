@@ -1,5 +1,5 @@
-import { Bookmark } from "@gorth-io/primitive/cores/lucide";
-import type { NavMainItem } from "@gorth-io/primitive/utils/interface";
+import { Bookmark } from "@gorth-com/primitive/cores/lucide";
+import type { NavMainItem } from "@gorth-com/primitive/utils/interface";
 export interface BrowserBookmark {
   id: string;
   title: string;

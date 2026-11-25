@@ -1,11 +1,11 @@
-import { useForm } from "@gorth-io/primitive/cores/tanstack/form";
+import { useForm } from "@gorth-com/primitive/cores/tanstack/form";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
-} from "@gorth-io/primitive/default/input-group";
-import { Search, ArrowRight } from "@gorth-io/primitive/cores/lucide";
+} from "@gorth-com/primitive/default/input-group";
+import { Search, ArrowRight } from "@gorth-com/primitive/cores/lucide";
 
 export function SearchForm({
   onSubmit,

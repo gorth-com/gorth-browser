@@ -1,8 +1,8 @@
 import { ErrorFeedback } from "@/components/element/error-feedback";
 import { useEffect, useState } from "react";
-import { Download, FolderOpen } from "@gorth-io/primitive/cores/lucide";
+import { Download, FolderOpen } from "@gorth-com/primitive/cores/lucide";
 import { PopoverMenuItem } from "@/components/element/popover-menu";
-import { Separator } from "@gorth-io/primitive/default/separator";
+import { Separator } from "@gorth-com/primitive/default/separator";
 import type { DownloadInfo } from "@/lib/browser/downloads";
 
 export function RecentDownloads({

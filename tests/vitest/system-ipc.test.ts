@@ -32,10 +32,10 @@ vi.mock("electron", () => ({
   shell: { openExternal: fixture.external },
   powerMonitor: {},
 }));
-vi.mock("@/services/browser-database", () => ({
-  readBrowserSetting: (key: string, fallback: unknown) =>
+vi.mock("@/models/setting", () => ({
+  rawReadBrowserSetting: (key: string, fallback: unknown) =>
     fixture.storage.get(key) ?? fallback,
-  writeBrowserSetting: (key: string, value: unknown) =>
+  rawWriteBrowserSetting: (key: string, value: unknown) =>
     fixture.storage.set(key, value),
 }));
 vi.mock("@/main/rpc/sender", () => ({

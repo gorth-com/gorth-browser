@@ -1,11 +1,11 @@
-import { ListChecks } from "@gorth-io/primitive/cores/lucide";
+import { ListChecks } from "@gorth-com/primitive/cores/lucide";
 import { PageShell } from "@/pages/shared";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@gorth-io/primitive/default/card";
+} from "@gorth-com/primitive/default/card";
 export function SettingsSectionPage() {
   return (
     <PageShell icon={ListChecks} title="Autofill and passwords">

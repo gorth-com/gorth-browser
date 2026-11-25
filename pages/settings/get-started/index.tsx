@@ -1,7 +1,7 @@
-import { Separator } from "@gorth-io/primitive/default/separator";
+import { Separator } from "@gorth-com/primitive/default/separator";
 import { useEffect, useRef, useState } from "react";
-import { useForm } from "@gorth-io/primitive/cores/tanstack/form";
-import { useQuery } from "@gorth-io/primitive/cores/tanstack/query";
+import { useForm } from "@gorth-com/primitive/cores/tanstack/form";
+import { useQuery } from "@gorth-com/primitive/cores/tanstack/query";
 import {
   ChevronRight,
   Download,
@@ -11,18 +11,18 @@ import {
   UserRound,
   Rocket,
   Star,
-} from "@gorth-io/primitive/cores/lucide";
-import { Button } from "@gorth-io/primitive/custom/button";
+} from "@gorth-com/primitive/cores/lucide";
+import { Button } from "@gorth-com/primitive/custom/button";
 import {
   Card,
   CardTitle,
   CardDescription,
-} from "@gorth-io/primitive/default/card";
-import { Textarea } from "@gorth-io/primitive/default/textarea";
+} from "@gorth-com/primitive/default/card";
+import { Textarea } from "@gorth-com/primitive/default/textarea";
 import {
   RadioGroup,
   RadioGroupItem,
-} from "@gorth-io/primitive/default/radio-group";
+} from "@gorth-com/primitive/default/radio-group";
 import {
   Select,
   SelectContent,
@@ -30,7 +30,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@gorth-io/primitive/custom/select";
+} from "@gorth-com/primitive/custom/select";
 import { PageHeading } from "@/components/heading";
 import { Wrapper } from "@/layouts/wrapper";
 import { useAuth } from "@/hooks/use-auth";

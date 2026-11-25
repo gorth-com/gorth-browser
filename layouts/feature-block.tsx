@@ -22,16 +22,16 @@ import {
   Search,
   SlidersHorizontal,
   X,
-} from "@gorth-io/primitive/cores/lucide";
+} from "@gorth-com/primitive/cores/lucide";
 
 import type { BrowserTabItem } from "@/components/element/browser-tabs";
 import { RecentDownloads } from "@/components/element/recent-downloads";
 import { PortalPanel } from "@/providers/portal";
 import { AddressBarForm } from "@/components/form/address-bar-form";
-import { Button } from "@gorth-io/primitive/custom/button";
-import { Input } from "@gorth-io/primitive/default/input";
+import { Button } from "@gorth-com/primitive/custom/button";
+import { Input } from "@gorth-com/primitive/default/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/providers/tooltip";
-import { cn } from "@gorth-io/primitive/cores/cn";
+import { cn } from "@gorth-com/primitive/cores/cn";
 import { formatAddress, formatAddressInput } from "@/utils/formatter";
 import {
   getPortalMenuAnchor,

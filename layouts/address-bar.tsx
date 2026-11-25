@@ -1,6 +1,6 @@
 import { useFullScreen } from "@/hooks/use-full-screen";
 import type { ComponentProps } from "react";
-import { cn } from "@gorth-io/primitive/cores/cn";
+import { cn } from "@gorth-com/primitive/cores/cn";
 import {
   AddressBarInput,
   FeatureLeftBlock,

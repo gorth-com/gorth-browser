@@ -1,5 +1,5 @@
 import { ErrorFeedback } from "@/components/element/error-feedback";
-import { ShieldCheck } from "@gorth-io/primitive/cores/lucide";
+import { ShieldCheck } from "@gorth-com/primitive/cores/lucide";
 import { useEffect, useState } from "react";
 import { PageShell } from "@/pages/shared";
 import {
@@ -8,11 +8,11 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-} from "@gorth-io/primitive/default/card";
-import { Button } from "@gorth-io/primitive/custom/button";
-import { Input } from "@gorth-io/primitive/default/input";
-import { Textarea } from "@gorth-io/primitive/default/textarea";
-import { Switch } from "@gorth-io/primitive/default/switch";
+} from "@gorth-com/primitive/default/card";
+import { Button } from "@gorth-com/primitive/custom/button";
+import { Input } from "@gorth-com/primitive/default/input";
+import { Textarea } from "@gorth-com/primitive/default/textarea";
+import { Switch } from "@gorth-com/primitive/default/switch";
 import { formatDateTime } from "@/utils/formatter";
 import {
   normalizeSite,

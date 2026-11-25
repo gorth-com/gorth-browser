@@ -2,16 +2,23 @@ import assert from "node:assert/strict";
 import { app, BrowserWindow, protocol, shell } from "electron";
 import { betterAuth } from "better-auth";
 import { electron } from "@better-auth/electron";
+import { setLoginBrowser } from "@/lib/auth/login-browser";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { createServer } from "node:http";
+import { registerLoginNavigation, routeLoginCallback, trackDesktopLoginPage } from "@/main/services/login-navigation";
 import {
   loginGorth,
   receiveGorthDeepLink,
   restoreGorthSession,
   signOutGorth,
   gorthSnapshot,
-  getGorthClient,
   authScheme,
   installGorthAuth,
 } from "@/lib/auth/gorth";
+import { authClient } from "@/lib/auth/client/index";
+assert(app.commandLine.hasSwitch("use-mock-keychain"), "Fixture requires mock Keychain");
+assert(process.argv[2] && path.isAbsolute(process.argv[2]), "Fixture requires a disposable profile");
 app.setPath("userData", process.argv[2]);
 app.setPath("sessionData", process.argv[2]);
 // Match Browser startup's single privileged-scheme registration without
@@ -35,6 +42,11 @@ installGorthAuth({ registerScheme: false });
 app.setAsDefaultProtocolClient = registerDefaultProtocol;
 async function run() {
   await app.whenReady();
+  const pageServer = createServer((_request, response) => response.end("<main>Isolated native auth fixture</main>"));
+  await new Promise<void>((resolve) => pageServer.listen(0, "127.0.0.1", resolve));
+  const address = pageServer.address();
+  assert(address && typeof address !== "string");
+  const pageOrigin = "http://127.0.0.1:" + address.port;
   const window = new BrowserWindow({
     show: false,
     width: 640,
@@ -47,8 +59,33 @@ async function run() {
   });
   try {
     await window.loadURL(
-      "data:text/html,<main>Isolated native auth fixture</main>",
+      pageOrigin + "/auth/desktop/complete",
     );
+    window.webContents.session.setPermissionRequestHandler((_contents, _permission, allow) => allow(false));
+    async function deliverFromPage(url: string) {
+      let timer: ReturnType<typeof setTimeout>;
+      const delivered = new Promise<boolean>((resolve, reject) => {
+        timer = setTimeout(() => reject(new Error("Callback click did not emit will-navigate")), 1500);
+        registerLoginNavigation(async (destination) => {
+          const accepted = await receiveGorthDeepLink(destination);
+          resolve(accepted);
+          return accepted;
+        });
+        window.webContents.once("will-navigate", (event, destination) => {
+          event.preventDefault();
+          routeLoginCallback(window.webContents, destination);
+        });
+      });
+      try {
+        await window.webContents.executeJavaScript(
+          "const a=document.createElement('a'); a.href=" + JSON.stringify(url) + "; document.body.append(a); a.click();",
+          true,
+        );
+        return await delivered;
+      } finally {
+        clearTimeout(timer!);
+      }
+    }
     const auth = betterAuth({
       baseURL: "http://localhost:5503",
       basePath: "/auth",
@@ -60,7 +97,7 @@ async function run() {
       plugins: [
         electron({
           clientID: "gorth-browser",
-          cookiePrefix: "gorth-browser-website",
+          cookiePrefix: "gorth",
         }),
       ],
       user: {
@@ -68,31 +105,31 @@ async function run() {
           externalUserId: { type: "string", required: true },
         },
       },
-      advanced: { cookiePrefix: "gorth-browser-website" },
+      advanced: { cookiePrefix: "gorth" },
     });
     await auth.$context;
     fixtureAuth = auth;
-    let authorization = "";
+    const authorizations: string[] = [];
     shell.openExternal = async (url) => {
-      authorization = url;
+      authorizations.push(url);
     };
-    const controller = new AbortController();
-    const login = loginGorth(controller.signal);
-    let loginError: unknown;
-    async function consume() {
-      try {
-        await login;
-      } catch (error) {
-        loginError = error;
+    async function beginLogin() {
+      const index = authorizations.length;
+      const controller = new AbortController();
+      const completed = loginGorth(controller.signal).then(
+        () => undefined,
+        (error: unknown) => error,
+      );
+      const deadline = Date.now() + 5000;
+      while (!authorizations[index]) {
+        assert(Date.now() < deadline, "SDK did not open its authorization page");
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
+      return { controller, completed, authorization: new URL(authorizations[index]) };
     }
-    const completed = consume();
-    const deadline = Date.now() + 5000;
-    while (!authorization) {
-      assert(Date.now() < deadline, "SDK did not open its authorization page");
-      await new Promise((resolve) => setTimeout(resolve, 10));
-    }
-    const query = new URL(authorization).search;
+    const cancelled = await beginLogin();
+    assert.equal(cancelled.authorization.protocol, "http:");
+    const query = cancelled.authorization.search;
     const response = await auth.handler(
       new Request("http://localhost:5503/auth/sign-up/email" + query, {
         method: "POST",
@@ -112,26 +149,49 @@ async function run() {
     const cookie = response.headers
       .getSetCookie()
       .find((value) =>
-        value.startsWith("gorth-browser-website.gorth-browser="),
+        value.startsWith("gorth.gorth-browser="),
       );
     assert(
       cookie,
       "The official server plugin did not issue the transfer cookie",
     );
-    const token = cookie
+    const oldToken = cookie
       .split(";")[0]
-      .slice("gorth-browser-website.gorth-browser=".length);
+      .slice("gorth.gorth-browser=".length);
+    cancelled.controller.abort();
+    assert.match(String(await cancelled.completed), /cancelled/);
+    const current = await beginLogin();
+    assert.notEqual(current.authorization.searchParams.get("state"), cancelled.authorization.searchParams.get("state"));
+    assert.equal(await receiveGorthDeepLink(
+      "com.gorth.browser://auth/callback#token=" + oldToken,
+    ), false, "A cancelled callback must not consume the new attempt");
+    const transfer = async (authorization: URL) => {
+      const response = await auth.handler(new Request(
+        "http://localhost:5503/auth/sign-in/email" + authorization.search, {
+          method: "POST",
+          headers: { Origin: "http://localhost:5503", "Content-Type": "application/json" },
+          body: JSON.stringify({ email: "fixture@example.test", password: "Test-only-password-123!" }),
+        },
+      ));
+      assert.equal(response.status, 200);
+      const cookie = response.headers.getSetCookie().find((value) => value.startsWith("gorth.gorth-browser="));
+      assert(cookie, "SDK transfer cookie missing");
+      return cookie.split(";")[0].slice("gorth.gorth-browser=".length);
+    };
+    const token = await transfer(current.authorization);
+    const browserLogin = new URL(current.authorization);
+    browserLogin.host = new URL(pageOrigin).host;
+    assert(trackDesktopLoginPage(browserLogin.href));
     assert(
-      await receiveGorthDeepLink(
+      await deliverFromPage(
         "com.gorth.browser://auth/callback#token=" + token,
       ),
     );
-    await completed;
-    assert.equal(loginError, undefined);
+    assert.equal(await current.completed, undefined);
     assert.equal(gorthSnapshot().user?.id, "fixture-sso-sub");
     await restoreGorthSession();
     assert.equal(gorthSnapshot().user?.id, "fixture-sso-sub");
-    const saved = getGorthClient().getCookie();
+    const saved = authClient.getCookie();
     await signOutGorth();
     assert.equal(gorthSnapshot().user, null);
     const oldSession = await auth.handler(
@@ -141,16 +201,40 @@ async function run() {
       ),
     );
     assert.equal(await oldSession.json(), null);
+    // The Gorth browser choice changes only the navigation target. Use the
+    // official SDK's state/challenge and transfer for a second full round trip.
+    setLoginBrowser("gorth");
+    const gorth = await beginLogin();
+    assert.equal(gorth.authorization.protocol, "com.gorth.browser:");
+    assert.equal(gorth.authorization.searchParams.get("url"), "http://localhost:5503/auth/desktop");
+    assert.equal(await receiveGorthDeepLink(
+      "com.gorth.browser://auth/callback#token=" + await transfer(gorth.authorization),
+    ), true);
+    assert.equal(await gorth.completed, undefined);
+    assert.equal(gorthSnapshot().user?.id, "fixture-sso-sub");
+    const stored = await readFile(path.join(process.argv[2], "better-auth.v1.json"), "utf8");
+    assert(!stored.includes("fixture@example.test"), "Stored session must remain encrypted");
+    await signOutGorth();
+    setLoginBrowser("default");
+    const invalidPkce = await beginLogin();
+    const tampered = new URL(invalidPkce.authorization);
+    tampered.searchParams.set("code_challenge", "wrong-challenge");
+    await receiveGorthDeepLink(
+      "com.gorth.browser://auth/callback#token=" + await transfer(tampered),
+    );
+    assert.match(String(await invalidPkce.completed), /Sign-in failed/);
+    assert.equal(gorthSnapshot().user, null, "SDK must reject the wrong PKCE challenge");
     assert.equal(BrowserWindow.getAllWindows().length, 1);
     assert.equal(
       await window.webContents.executeJavaScript("typeof window.electronAPI"),
       "undefined",
     );
     console.info(
-      "Native auth: official PKCE transfer, secure storage, restore, app-only logout and isolated renderer passed.",
+      "Native auth: SDK PKCE, stale callback, cancellation, browser choices, secure storage, restore and logout passed.",
     );
   } finally {
     window.destroy();
+    await new Promise<void>((resolve) => pageServer.close(() => resolve()));
   }
 }
 async function main() {

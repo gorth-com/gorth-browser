@@ -12,12 +12,12 @@ import {
   Settings,
   Trash2,
   X,
-} from "@gorth-io/primitive/cores/lucide";
+} from "@gorth-com/primitive/cores/lucide";
 import { PageShell, EmptyState } from "@/pages/shared";
-import { Button } from "@gorth-io/primitive/custom/button";
-import { Input } from "@gorth-io/primitive/default/input";
-import { Card, CardContent } from "@gorth-io/primitive/default/card";
-import { Progress } from "@gorth-io/primitive/default/progress";
+import { Button } from "@gorth-com/primitive/custom/button";
+import { Input } from "@gorth-com/primitive/default/input";
+import { Card, CardContent } from "@gorth-com/primitive/default/card";
+import { Progress } from "@gorth-com/primitive/default/progress";
 import type { DownloadInfo } from "@/lib/browser/downloads";
 import {
   formatDateTime,

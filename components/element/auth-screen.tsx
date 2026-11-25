@@ -1,6 +1,6 @@
 import { ErrorFeedback } from "@/components/element/error-feedback";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@gorth-io/primitive/custom/button";
+import { Button } from "@gorth-com/primitive/custom/button";
 import { useAuth } from "@/hooks/use-auth";
 import type { AuthViewState } from "@/lib/auth/view-types";
 

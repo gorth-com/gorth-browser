@@ -1,11 +1,11 @@
-import { Wallet } from "@gorth-io/primitive/cores/lucide";
+import { Wallet } from "@gorth-com/primitive/cores/lucide";
 import { PageShell } from "@/pages/shared";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@gorth-io/primitive/default/card";
+} from "@gorth-com/primitive/default/card";
 export function SettingsSectionPage() {
   return (
     <PageShell icon={Wallet} title="Web3">

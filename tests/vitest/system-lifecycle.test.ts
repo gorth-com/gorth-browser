@@ -38,9 +38,11 @@ vi.mock("@/main/services/system", () => ({
     energyActive: fixture.energyActive,
   }),
 }));
-vi.mock("@/services/browser-database", () => ({
-  archiveTab: fixture.archive,
-  writeBrowserSetting: vi.fn(),
+vi.mock("@/models/archived-tab", () => ({
+  rawArchiveTab: fixture.archive,
+}));
+vi.mock("@/models/setting", () => ({
+  rawWriteBrowserSetting: vi.fn(),
 }));
 import {
   sleepTab,

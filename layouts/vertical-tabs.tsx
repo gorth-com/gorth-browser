@@ -1,13 +1,13 @@
 import { useRef, type ComponentProps } from "react";
-import { ChevronDown, Plus } from "@gorth-io/primitive/cores/lucide";
+import { ChevronDown, Plus } from "@gorth-com/primitive/cores/lucide";
 import { BrowserTabs } from "@/components/element/browser-tabs";
-import { Button } from "@gorth-io/primitive/custom/button";
+import { Button } from "@gorth-com/primitive/custom/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/providers/tooltip";
 import {
   getPortalMenuAnchor,
   getPortalMenuTheme,
 } from "@/lib/browser/browser-menu";
-import { cn } from "@gorth-io/primitive/cores/cn";
+import { cn } from "@gorth-com/primitive/cores/cn";
 
 interface VerticalTabsProps extends ComponentProps<typeof BrowserTabs> {
   onCreateTab: () => void;

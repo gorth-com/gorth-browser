@@ -5,7 +5,7 @@ import {
   createRoute,
   createRouter,
   type RouteComponent,
-} from "@gorth-io/primitive/cores/tanstack/router";
+} from "@gorth-com/primitive/cores/tanstack/router";
 import { type BrowserInternalPage } from "./internal-pages";
 
 export function createInternalRouter(

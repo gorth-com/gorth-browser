@@ -11,7 +11,7 @@ import {
   Rocket,
   Star,
   User,
-} from "@gorth-io/primitive/cores/lucide";
+} from "@gorth-com/primitive/cores/lucide";
 import {
   Sidebar,
   SidebarContent,
@@ -22,7 +22,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
-} from "@gorth-io/primitive/custom/sidebar";
+} from "@gorth-com/primitive/custom/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/providers/tooltip";
 import { NavUser } from "@/components/dashboard/nav-user";
 import { useAuth } from "@/hooks/use-auth";

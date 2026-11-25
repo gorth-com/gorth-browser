@@ -14,13 +14,15 @@ vi.mock("@/utils/environment", () => ({
   authUrl: "https://browser.example.test",
 }));
 vi.mock("@/lib/http/transport", () => ({ desktopFetch: fixture.fetch }));
+vi.mock("@/lib/auth/client/index", () => ({
+  authClient: { getCookie: () => "fixture-private-cookie" },
+}));
 vi.mock("@/lib/auth/gorth", () => ({
   getGorthUserId: () => fixture.user || null,
   gorthSnapshot: () => ({
     user: fixture.user ? { id: fixture.user } : null,
     locked: false,
   }),
-  getGorthClient: () => ({ getCookie: () => "fixture-private-cookie" }),
   restoreGorthSession: vi.fn(),
 }));
 vi.mock("@/main/windows/capital", () => ({
@@ -33,12 +35,14 @@ vi.mock("@/main/services/tab-lifecycle", () => ({
   restoreTabSession: (_window: unknown, snapshot: unknown) => snapshot,
 }));
 vi.mock("@/main/windows/webview", () => ({ destroyWebview: vi.fn() }));
-vi.mock("@/services/browser-database", () => ({
-  readBrowserSetting: (key: string, fallback: unknown) =>
+vi.mock("@/models/setting", () => ({
+  rawReadBrowserSetting: (key: string, fallback: unknown) =>
     fixture.records.get(key) ?? fallback,
-  writeBrowserSetting: (key: string, value: unknown) =>
+  rawWriteBrowserSetting: (key: string, value: unknown) =>
     fixture.records.set(key, value),
-  loadBrowserSnapshot: () => ({
+}));
+vi.mock("@/models/tab", () => ({
+  rawLoadBrowserSnapshot: () => ({
     activeTabId: null,
     splitTabId: null,
     tabs: [],
@@ -56,7 +60,7 @@ vi.mock("@/services/browser-database", () => ({
       archiveAfterDays: 0,
     },
   }),
-  saveBrowserSnapshot: fixture.saved,
+  rawSaveBrowserSnapshot: fixture.saved,
 }));
 import { configureSync, runSync, syncStatus } from "@/main/services/sync";
 const window = {

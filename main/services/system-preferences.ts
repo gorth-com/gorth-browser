@@ -1,7 +1,4 @@
-import {
-  readBrowserSetting,
-  writeBrowserSetting,
-} from "@/services/browser-database";
+import { rawReadBrowserSetting, rawWriteBrowserSetting } from "@/models/setting"
 import {
   defaultSystemPreferences,
   systemPreferencesSchema,
@@ -9,7 +6,7 @@ import {
 
 export function getSystemPreferences() {
   const result = systemPreferencesSchema.safeParse(
-    readBrowserSetting("systemPreferences", defaultSystemPreferences),
+    rawReadBrowserSetting("systemPreferences", defaultSystemPreferences),
   );
   return result.success
     ? result.data
@@ -18,6 +15,6 @@ export function getSystemPreferences() {
 export function saveSystemPreferences(input: unknown) {
   const preferences = systemPreferencesSchema.parse(input);
   preferences.activeSites = [...new Set(preferences.activeSites)];
-  writeBrowserSetting("systemPreferences", preferences);
+  rawWriteBrowserSetting("systemPreferences", preferences);
   return preferences;
 }

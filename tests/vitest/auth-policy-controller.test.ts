@@ -1,4 +1,11 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+vi.mock("@gorth-com/primitive/cores/tanstack/query", () => ({
+  useQuery: () => ({
+    data: { ok: true, snapshot: fixture.snapshot },
+    isFetched: true,
+  }),
+  useQueryClient: () => ({ cancelQueries: vi.fn(), setQueryData: vi.fn() }),
+}));
 
 const fixture = vi.hoisted(() => ({
   snapshot: {} as Record<string, unknown>,

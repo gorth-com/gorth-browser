@@ -2,16 +2,10 @@ import { defaultBrowserPreferences } from "@/utils/constant";
 import path from "node:path";
 import { app } from "electron";
 import Database from "better-sqlite3";
-import {
-  initializeDatabase,
-  closeDatabase,
-  loadBrowserSnapshot,
-  saveBrowserSnapshot,
-  writeBrowserSetting,
-  readBrowserSetting,
-  saveTabGroup,
-  loadTabGroups,
-} from "@/services/browser-database";
+import { rawInitializeDatabase, rawCloseDatabase } from "@/services/database"
+import { rawLoadBrowserSnapshot, rawSaveBrowserSnapshot } from "@/models/tab"
+import { rawWriteBrowserSetting, rawReadBrowserSetting } from "@/models/setting"
+import { rawSaveTabGroup, rawLoadTabGroups } from "@/models/tab-group"
 
 const directory = process.argv.at(-1);
 if (
@@ -30,10 +24,10 @@ void app.whenReady().then(() => {
       "CREATE TABLE profiles(id TEXT PRIMARY KEY,name TEXT NOT NULL,created_at INTEGER NOT NULL); INSERT INTO profiles VALUES ('default','Retained',1); CREATE TABLE settings(profile_id TEXT NOT NULL,key TEXT NOT NULL,value TEXT NOT NULL,PRIMARY KEY(profile_id,key)); INSERT INTO settings VALUES ('default','fixture','\"retained\"')",
     );
     legacy.close();
-    initializeDatabase(directory);
-    const settings = readBrowserSetting("fixture", "missing");
-    writeBrowserSetting("fixture", "updated");
-    saveBrowserSnapshot({
+    rawInitializeDatabase(directory);
+    const settings = rawReadBrowserSetting("fixture", "missing");
+    rawWriteBrowserSetting("fixture", "updated");
+    rawSaveBrowserSnapshot({
       activeTabId: "existing",
       splitTabId: null,
       groups: [],
@@ -58,23 +52,23 @@ void app.whenReady().then(() => {
       ],
       preferences: defaultBrowserPreferences,
     });
-    saveTabGroup({
+    rawSaveTabGroup({
       id: "group",
       name: "Saved group",
       mode: "normal",
       tabIds: ["existing"],
     });
-    closeDatabase();
-    initializeDatabase(directory);
-    const restored = loadBrowserSnapshot();
+    rawCloseDatabase();
+    rawInitializeDatabase(directory);
+    const restored = rawLoadBrowserSnapshot();
     const report = {
       settings,
-      updated: readBrowserSetting("fixture", "missing"),
+      updated: rawReadBrowserSetting("fixture", "missing"),
       tab: restored.tabs[0]?.title,
       bookmark: restored.bookmarks[0]?.title,
-      group: loadTabGroups()[0]?.name,
+      group: rawLoadTabGroups()[0]?.name,
     };
-    closeDatabase();
+    rawCloseDatabase();
     const check = new Database(path.join(directory, "gorth-browser.db"), {
       readonly: true,
     });
@@ -94,7 +88,7 @@ void app.whenReady().then(() => {
     console.error(error);
     process.exitCode = 1;
   } finally {
-    closeDatabase();
+    rawCloseDatabase();
     clearTimeout(timer);
     app.quit();
   }

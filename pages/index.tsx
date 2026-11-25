@@ -1,6 +1,6 @@
 import type { SpecialPageProps } from "./shared";
 import { createContext, useContext, useState } from "react";
-import { RouterProvider } from "@gorth-io/primitive/cores/tanstack/router";
+import { RouterProvider } from "@gorth-com/primitive/cores/tanstack/router";
 import { createInternalRouter } from "@/lib/browser/router";
 import { SettingsPage } from "./settings";
 import { BookmarksPage } from "./bookmarks";

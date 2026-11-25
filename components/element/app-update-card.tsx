@@ -1,12 +1,12 @@
 import { ErrorFeedback } from "@/components/element/error-feedback";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@gorth-io/primitive/custom/button";
+import { Button } from "@gorth-com/primitive/custom/button";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
-} from "@gorth-io/primitive/default/card";
+} from "@gorth-com/primitive/default/card";
 import type { UpdateState } from "@/lib/update/interface";
 export function AppUpdateCard() {
   const [state, setState] = useState<UpdateState>();

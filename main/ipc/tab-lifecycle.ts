@@ -1,16 +1,12 @@
 import { ipcMain } from "electron";
-import { z } from "@gorth-io/structure/cores/zod";
+import { z } from "@gorth-com/structure/cores/zod";
 import { getBrowserState, getWindowFromSender } from "@/main/windows/capital";
 import {
   archiveBrowserTab,
   sleepTab,
   wakeTab,
 } from "@/main/services/tab-lifecycle";
-import {
-  listArchivedTabs,
-  takeArchivedTab,
-  restoreArchivedTab,
-} from "@/services/browser-database";
+import { rawListArchivedTabs, rawTakeArchivedTab, rawRestoreArchivedTab } from "@/models/archived-tab"
 
 export function registerTabLifecycleIpc() {
   const requireWindow = (event: Electron.IpcMainInvokeEvent) => {
@@ -32,12 +28,12 @@ export function registerTabLifecycleIpc() {
   );
   ipcMain.handle("archive:list", (event) => {
     requireWindow(event);
-    return listArchivedTabs();
+    return rawListArchivedTabs();
   });
   ipcMain.handle("archive:restore", (event, id: unknown) => {
     const window = requireWindow(event);
     const state = getBrowserState(window);
-    const tab = restoreArchivedTab(idSchema.parse(id), state.sessionId);
+    const tab = rawRestoreArchivedTab(idSchema.parse(id), state.sessionId);
     if (!tab) return null;
     state.tabMetadata.set(tab.id, tab);
     state.activeTabId = tab.id;
@@ -46,6 +42,6 @@ export function registerTabLifecycleIpc() {
   });
   ipcMain.handle("archive:delete", (event, id: unknown) => {
     requireWindow(event);
-    takeArchivedTab(idSchema.parse(id), true);
+    rawTakeArchivedTab(idSchema.parse(id), true);
   });
 }

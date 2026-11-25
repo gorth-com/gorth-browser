@@ -3,11 +3,11 @@ import { createRoot } from "react-dom/client";
 import {
   QueryClient,
   QueryClientProvider,
-} from "@gorth-io/primitive/cores/tanstack/query";
+} from "@gorth-com/primitive/cores/tanstack/query";
 import { SettingsSectionPage } from "@/pages/settings/get-started";
 import { NewTabPage } from "@/pages/new-tab";
 import { SettingsPage as AppearancePage } from "@/pages/settings/appearance";
-import { SidebarProvider } from "@gorth-io/primitive/custom/sidebar";
+import { SidebarProvider } from "@gorth-com/primitive/custom/sidebar";
 import { AuthContext, useAuth } from "@/hooks/use-auth";
 import { PortalProvider } from "@/providers/portal";
 import { ToasterProvider } from "@/providers/toaster";

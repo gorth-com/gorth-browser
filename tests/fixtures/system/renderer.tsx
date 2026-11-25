@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import {
   QueryClient,
   QueryClientProvider,
-} from "@gorth-io/primitive/cores/tanstack/query";
+} from "@gorth-com/primitive/cores/tanstack/query";
 import { SettingsSectionPage } from "@/pages/settings/system";
 import { PortalProvider } from "@/providers/portal";
 import { ToasterProvider } from "@/providers/toaster";

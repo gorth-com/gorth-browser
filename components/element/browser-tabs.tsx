@@ -14,14 +14,14 @@ import {
   Volume2,
   VolumeX,
   X,
-} from "@gorth-io/primitive/cores/lucide";
+} from "@gorth-com/primitive/cores/lucide";
 import type { PersistedTabGroup } from "@/lib/browser/persistence";
 import { getCompactTabWidth } from "@/lib/browser/tab-layout";
 
-import { Button } from "@gorth-io/primitive/custom/button";
+import { Button } from "@gorth-com/primitive/custom/button";
 import { TabIcon } from "@/components/element/tab-icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/providers/tooltip";
-import { cn } from "@gorth-io/primitive/cores/cn";
+import { cn } from "@gorth-com/primitive/cores/cn";
 import { toast } from "@/providers/toaster";
 import type { BrowserInternalPage } from "@/lib/browser/internal-pages";
 import {

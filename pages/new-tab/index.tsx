@@ -5,19 +5,19 @@ import {
   Globe2,
   ShieldCheck,
   Zap,
-} from "@gorth-io/primitive/cores/lucide";
+} from "@gorth-com/primitive/cores/lucide";
 
 import { ThemeToggle } from "@/components/element/theme-toggle";
-import { Badge } from "@gorth-io/primitive/custom/badge";
-import { Button } from "@gorth-io/primitive/custom/button";
+import { Badge } from "@gorth-com/primitive/custom/badge";
+import { Button } from "@gorth-com/primitive/custom/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@gorth-io/primitive/default/card";
-import { Separator } from "@gorth-io/primitive/default/separator";
+} from "@gorth-com/primitive/default/card";
+import { Separator } from "@gorth-com/primitive/default/separator";
 import type { Theme } from "@/lib/theme";
 import { Wrapper } from "@/layouts/wrapper";
 import { SearchForm } from "@/components/form/search-form";

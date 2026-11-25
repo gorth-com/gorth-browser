@@ -8,16 +8,10 @@ import {
   startSyncScheduler,
 } from "@/main/services/sync";
 import { getRpcRendererUrl, isRpcRendererUrl } from "@/main/rpc/sender";
-import { z } from "@gorth-io/structure/cores/zod";
-import {
-  addRecentlyClosedTab,
-  loadBrowserSnapshot,
-  popRecentlyClosedTab,
-  saveBrowserSnapshot,
-  saveTabGroup,
-  deleteTabGroup,
-  loadTabGroups,
-} from "@/services/browser-database";
+import { z } from "@gorth-com/structure/cores/zod";
+import { rawAddRecentlyClosedTab, rawPopRecentlyClosedTab } from "@/models/recently-closed"
+import { rawLoadBrowserSnapshot, rawSaveBrowserSnapshot } from "@/models/tab"
+import { rawSaveTabGroup, rawDeleteTabGroup, rawLoadTabGroups } from "@/models/tab-group"
 import type { BrowserSnapshot, PersistedTab } from "@/lib/browser/persistence";
 import { getWindowFromSender, getBrowserState } from "@/main/windows/capital";
 import {
@@ -70,25 +64,25 @@ export function registerDatabaseIpc() {
     return getBrowserState(window).sessionId;
   };
   ipcMain.handle("tab-groups:save", (event, input: unknown) => {
-    return saveTabGroup(
+    return rawSaveTabGroup(
       tabGroupSchema.parse(input),
       requireAppSender(event.sender),
     );
   });
   ipcMain.handle("tab-groups:delete", (event, input: unknown) => {
-    return deleteTabGroup(
+    return rawDeleteTabGroup(
       z.string().min(1).max(128).parse(input),
       requireAppSender(event.sender),
     );
   });
   ipcMain.handle("tab-groups:list", (event) => {
-    return loadTabGroups(requireAppSender(event.sender));
+    return rawLoadTabGroups(requireAppSender(event.sender));
   });
   ipcMain.handle("persistence:load", (event) => {
     const windowId = requireAppSender(event.sender);
     return restoreTabSession(
       getWindowFromSender(event.sender)!,
-      loadBrowserSnapshot(windowId),
+      rawLoadBrowserSnapshot(windowId),
     );
   });
   ipcMain.handle("persistence:save", (event, snapshot: BrowserSnapshot) => {
@@ -96,7 +90,7 @@ export function registerDatabaseIpc() {
     const windowId = requireAppSender(event.sender);
     const window = getWindowFromSender(event.sender)!;
     synchronizeTabSession(window, snapshot);
-    saveBrowserSnapshot(snapshot, windowId);
+    rawSaveBrowserSnapshot(snapshot, windowId);
     captureSyncSnapshot(snapshot, windowId);
   });
   ipcMain.on("persistence:flush", (event, snapshot: BrowserSnapshot) => {
@@ -108,7 +102,7 @@ export function registerDatabaseIpc() {
       }
       snapshot = browserSnapshotSchema.parse(snapshot);
       synchronizeTabSession(window, snapshot);
-      saveBrowserSnapshot(snapshot, requireAppSender(event.sender));
+      rawSaveBrowserSnapshot(snapshot, requireAppSender(event.sender));
       captureSyncSnapshot(snapshot, requireAppSender(event.sender));
       event.returnValue = true;
     } catch (error) {
@@ -126,12 +120,12 @@ export function registerDatabaseIpc() {
       getWindowFromSender(event.sender)!,
       tab.id,
     );
-    addRecentlyClosedTab(
+    rawAddRecentlyClosedTab(
       { ...tab, navigation: runtime?.navigation ?? tab.navigation },
       windowId,
     );
   });
   ipcMain.handle("persistence:reopen-closed-tab", (event) =>
-    popRecentlyClosedTab(requireAppSender(event.sender)),
+    rawPopRecentlyClosedTab(requireAppSender(event.sender)),
   );
 }

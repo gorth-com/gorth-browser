@@ -1,7 +1,7 @@
 import { ShortcutsPage } from "@/pages/settings/shortcuts";
 import { FoldersPage } from "./folders";
 import { Wrapper } from "@/layouts/wrapper";
-import { SidebarProvider } from "@gorth-io/primitive/custom/sidebar";
+import { SidebarProvider } from "@gorth-com/primitive/custom/sidebar";
 import { useEffect, useState, type CSSProperties } from "react";
 import { Dashboard } from "@/layouts/dashboard";
 import type { SpecialPageProps } from "@/pages/shared";

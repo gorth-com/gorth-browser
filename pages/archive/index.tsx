@@ -1,8 +1,8 @@
 import { ErrorFeedback } from "@/components/element/error-feedback";
 import { useEffect, useState } from "react";
-import { Archive, RotateCcw, Trash2 } from "@gorth-io/primitive/cores/lucide";
-import { Button } from "@gorth-io/primitive/custom/button";
-import { Card, CardContent } from "@gorth-io/primitive/default/card";
+import { Archive, RotateCcw, Trash2 } from "@gorth-com/primitive/cores/lucide";
+import { Button } from "@gorth-com/primitive/custom/button";
+import { Card, CardContent } from "@gorth-com/primitive/default/card";
 import { PageShell, EmptyState } from "@/pages/shared";
 import type { ArchiveEntry } from "@/lib/browser/lifecycle";
 import type { PersistedTab } from "@/lib/browser/persistence";

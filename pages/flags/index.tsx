@@ -1,12 +1,12 @@
-import { Beaker } from "@gorth-io/primitive/cores/lucide";
+import { Beaker } from "@gorth-com/primitive/cores/lucide";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@gorth-io/primitive/default/card";
-import { Switch } from "@gorth-io/primitive/default/switch";
+} from "@gorth-com/primitive/default/card";
+import { Switch } from "@gorth-com/primitive/default/switch";
 import { type SpecialPageProps, PageShell } from "@/pages/shared";
 function FlagsPage({
   flags,

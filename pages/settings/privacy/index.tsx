@@ -1,11 +1,11 @@
-import { LockKeyhole } from "@gorth-io/primitive/cores/lucide";
+import { LockKeyhole } from "@gorth-com/primitive/cores/lucide";
 import { PageShell } from "@/pages/shared";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@gorth-io/primitive/default/card";
+} from "@gorth-com/primitive/default/card";
 export function SettingsSectionPage() {
   return (
     <PageShell icon={LockKeyhole} title="Privacy and security">

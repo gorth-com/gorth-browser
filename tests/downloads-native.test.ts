@@ -10,12 +10,9 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { app, BrowserWindow, session } from "electron";
-import {
-  initializeDatabase,
-  closeDatabase,
-  saveDownloadPreferences,
-  loadDownloads,
-} from "@/services/browser-database";
+import { rawInitializeDatabase, rawCloseDatabase } from "@/services/database"
+import { rawSaveDownloadPreferences } from "@/models/setting"
+import { rawLoadDownloads } from "@/models/download"
 import {
   installDownloadManager,
   shutdownDownloadManager,
@@ -50,8 +47,8 @@ async function waitFor<T>(
 
 async function run() {
   await app.whenReady();
-  initializeDatabase(profile);
-  saveDownloadPreferences({ directory: destination, askWhereToSave: false });
+  rawInitializeDatabase(profile);
+  rawSaveDownloadPreferences({ directory: destination, askWhereToSave: false });
   installDownloadManager(session.defaultSession);
   const server = createServer((request, response) => {
     const slow = request.url?.startsWith("/slow");
@@ -149,7 +146,7 @@ async function run() {
     );
     removeDownload(slow.id);
     assert.ok(existsSync(slow.savePath));
-    assert.equal(loadDownloads().length, 2);
+    assert.equal(rawLoadDownloads().length, 2);
     await assert.rejects(
       () => openDownload(cancelled.id, window, false),
       /not completed/,
@@ -159,7 +156,7 @@ async function run() {
     );
   } finally {
     shutdownDownloadManager();
-    closeDatabase();
+    rawCloseDatabase();
     window.destroy();
     server.closeAllConnections();
     await new Promise<void>((resolve) => server.close(() => resolve()));
@@ -174,6 +171,6 @@ run()
   .catch((error) => {
     console.error(error);
     shutdownDownloadManager();
-    closeDatabase();
+    rawCloseDatabase();
     app.exit(1);
   });

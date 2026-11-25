@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain, shell, type WebContents } from "electron";
-import { parseLoginNavigation } from "@/lib/auth/login-navigation";
+import { parseDesktopLoginPage, parseLoginNavigation } from "@/lib/auth/login-navigation";
 import { getRpcRendererUrl, isRpcRendererUrl } from "@/main/rpc/sender";
 
 const queue: Array<{ url: string; expiresAt: number }> = [];
@@ -16,9 +16,7 @@ function flush() {
   owner.show();
   owner.focus();
 }
-export function receiveLoginNavigation(value: string) {
-  const target = parseLoginNavigation(value);
-  if (!target) return false;
+function rememberOrigin(target: { origin: string; callbackScheme: string }) {
   for (const [key, deadline] of origins)
     if (deadline <= Date.now()) origins.delete(key);
   // This is an origin routing allowlist, not an OAuth session/state store.
@@ -27,11 +25,25 @@ export function receiveLoginNavigation(value: string) {
     target.origin + "|" + target.callbackScheme,
     Date.now() + 120_000,
   );
+}
+export function receiveLoginNavigation(value: string) {
+  const target = parseLoginNavigation(value);
+  if (!target) return false;
+  rememberOrigin(target);
   if (queue.length >= 4) queue.shift();
   queue.push({ url: target.url, expiresAt: Date.now() + 120_000 });
   if (!owner || owner.isDestroyed()) {
     if (app.isReady()) app.emit("activate");
   } else flush();
+  return true;
+}
+
+// The OS default-browser path opens an ordinary HTTP URL, without an auth/open
+// deep link. Observe that exact SDK entry before SSO removes its query string.
+export function trackDesktopLoginPage(value: string) {
+  const target = parseDesktopLoginPage(value);
+  if (!target) return false;
+  rememberOrigin(target);
   return true;
 }
 export function registerLoginNavigation(

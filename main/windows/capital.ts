@@ -1,6 +1,6 @@
 import { defaultBrowserPreferences } from "@/utils/constant";
 import { appUrl } from "@/utils/environment";
-import { routeLoginCallback } from "@/main/services/login-navigation";
+import { routeLoginCallback, trackDesktopLoginPage } from "@/main/services/login-navigation";
 import { installPortal } from "@/main/windows/portal";
 import {
   createWebview,
@@ -11,7 +11,7 @@ import {
 import { app, BrowserWindow, nativeTheme, type WebContents } from "electron";
 import path from "node:path";
 import { parseHttpUrl } from "@/utils/schema";
-import { saveWindowState, setWindowOpen } from "@/services/browser-database";
+import { rawSaveWindowState, rawSetWindowOpen } from "@/models/window"
 import {
   getInternalPageTitle,
   getInternalPageUrl,
@@ -264,6 +264,10 @@ export function createTabView(window: BrowserWindow, tabId: string) {
   registerBlockerContents(view.webContents);
   state.views.set(tabId, record);
 
+  view.webContents.on("did-start-navigation", (_event, url, _inPlace, isMainFrame) => {
+    if (isMainFrame) trackDesktopLoginPage(url);
+  });
+
   view.webContents.on("did-start-loading", () => {
     if (getBrowserState(window).internalPages.has(tabId)) return;
     sendTabUpdate(window, { id: tabId, isLoading: true });
@@ -482,7 +486,7 @@ export const createWindow = (sessionId: string = crypto.randomUUID()) => {
     if (saveWindowTimer) clearTimeout(saveWindowTimer);
     saveWindowTimer = setTimeout(() => {
       const bounds = mainWindow.getNormalBounds();
-      saveWindowState(
+      rawSaveWindowState(
         { ...bounds, isMaximized: mainWindow.isMaximized() },
         sessionId,
       );
@@ -501,11 +505,11 @@ export const createWindow = (sessionId: string = crypto.randomUUID()) => {
     dismissPortalMenuForParent(mainWindow);
     if (saveWindowTimer) clearTimeout(saveWindowTimer);
     const bounds = mainWindow.getNormalBounds();
-    saveWindowState(
+    rawSaveWindowState(
       { ...bounds, isMaximized: mainWindow.isMaximized() },
       sessionId,
     );
-    setWindowOpen(
+    rawSetWindowOpen(
       sessionId,
       isSystemQuitting() || getBrowserWindows().length === 1,
     );
@@ -520,11 +524,11 @@ export const createWindow = (sessionId: string = crypto.randomUUID()) => {
     browserStates.delete(mainWindow.id);
   });
   mainWindow.once("ready-to-show", () => {
-    saveWindowState(
+    rawSaveWindowState(
       { ...mainWindow.getNormalBounds(), isMaximized: restored.shouldMaximize },
       sessionId,
     );
-    setWindowOpen(sessionId, true);
+    rawSetWindowOpen(sessionId, true);
     if (restored.shouldMaximize) mainWindow.maximize();
     mainWindow.show();
   });

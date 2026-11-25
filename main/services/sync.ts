@@ -1,19 +1,15 @@
 import { app, BrowserWindow } from "electron";
 import { hostname } from "node:os";
+import { authClient } from "@/lib/auth/client/index";
 import {
   gorthSnapshot,
-  getGorthClient,
   getGorthUserId,
   restoreGorthSession,
 } from "@/lib/auth/gorth";
 import { authUrl } from "@/utils/environment";
 import { desktopFetch } from "@/lib/http/transport";
-import {
-  loadBrowserSnapshot,
-  saveBrowserSnapshot,
-  readBrowserSetting,
-  writeBrowserSetting,
-} from "@/services/browser-database";
+import { rawLoadBrowserSnapshot, rawSaveBrowserSnapshot } from "@/models/tab"
+import { rawReadBrowserSetting, rawWriteBrowserSetting } from "@/models/setting"
 import { getBrowserState, getWindowFromSender } from "@/main/windows/capital";
 import {
   syncJournalSchema,
@@ -38,7 +34,7 @@ let lastError: string | null = null;
 const settingKey = (account: string) => `cloud-sync:v1:${account}`;
 function journal(account: string): SyncJournal {
   return syncJournalSchema.parse(
-    readBrowserSetting(settingKey(account), {
+    rawReadBrowserSetting(settingKey(account), {
       options: { enabled: false, kinds: ["bookmarks"] },
       records: [],
       baselines: {},
@@ -47,10 +43,10 @@ function journal(account: string): SyncJournal {
 }
 function persist(account: string, value: SyncJournal) {
   if (
-    JSON.stringify(readBrowserSetting(settingKey(account), null)) !==
+    JSON.stringify(rawReadBrowserSetting(settingKey(account), null)) !==
     JSON.stringify(value)
   )
-    writeBrowserSetting(settingKey(account), value);
+    rawWriteBrowserSetting(settingKey(account), value);
 }
 export function captureSyncSnapshot(
   snapshot: BrowserSnapshot,
@@ -64,7 +60,7 @@ export function captureSyncSnapshot(
     account,
     observeSyncData(state, windowId, {
       ...snapshot,
-      workspaces: readBrowserSetting(`sync-workspaces:${windowId}`, []),
+      workspaces: rawReadBrowserSetting(`sync-workspaces:${windowId}`, []),
     }),
   );
 }
@@ -87,7 +83,7 @@ async function request(
     redirect: "error",
     signal: AbortSignal.timeout(20_000),
     headers: {
-      Cookie: getGorthClient().getCookie(),
+      Cookie: authClient.getCookie(),
       Origin: target.origin,
       ...(body === undefined ? {} : { "Content-Type": "application/json" }),
     },
@@ -110,7 +106,7 @@ async function request(
 }
 function apply(window: BrowserWindow, state: SyncJournal) {
   const windowId = getBrowserState(window).sessionId;
-  const local = loadBrowserSnapshot(windowId);
+  const local = rawLoadBrowserSnapshot(windowId);
   const document: Record<string, unknown> = { ...local };
   for (const kind of state.options.kinds) {
     const rows = state.records
@@ -166,12 +162,12 @@ function apply(window: BrowserWindow, state: SyncJournal) {
     : null;
   const snapshot = browserSnapshotSchema.parse(document);
   if (state.options.kinds.includes("workspaces"))
-    writeBrowserSetting(`sync-workspaces:${windowId}`, document.workspaces);
+    rawWriteBrowserSetting(`sync-workspaces:${windowId}`, document.workspaces);
   const next = observeSyncData(state, windowId, {
     ...snapshot,
     workspaces:
       document.workspaces ??
-      readBrowserSetting(`sync-workspaces:${windowId}`, []),
+      rawReadBrowserSetting(`sync-workspaces:${windowId}`, []),
   });
   // Applying received data updates the baseline, not the version of the remote records.
   const account = getGorthUserId();
@@ -197,7 +193,7 @@ function apply(window: BrowserWindow, state: SyncJournal) {
     }
     restoreTabSession(window, snapshot);
   }
-  saveBrowserSnapshot(snapshot, windowId);
+  rawSaveBrowserSnapshot(snapshot, windowId);
   window.webContents.send("sync:applied", snapshot);
 }
 export function syncStatus() {
@@ -231,7 +227,7 @@ export function configureSync(window: BrowserWindow, value: unknown) {
   persist(account, state);
   if (options.enabled)
     captureSyncSnapshot(
-      loadBrowserSnapshot(getBrowserState(window).sessionId),
+      rawLoadBrowserSnapshot(getBrowserState(window).sessionId),
       getBrowserState(window).sessionId,
     );
   return syncStatus();
@@ -248,10 +244,10 @@ export async function runSync(window: BrowserWindow) {
     const account = getGorthUserId();
     if (!account || !journal(account).options.enabled) return syncStatus();
     const windowId = getBrowserState(window).sessionId;
-    const snapshot = loadBrowserSnapshot(windowId);
+    const snapshot = rawLoadBrowserSnapshot(windowId);
     const state = observeSyncData(journal(account), windowId, {
       ...snapshot,
-      workspaces: readBrowserSetting(`sync-workspaces:${windowId}`, []),
+      workspaces: rawReadBrowserSetting(`sync-workspaces:${windowId}`, []),
     });
     persist(account, state);
     const response = syncResponseSchema.parse(
@@ -315,7 +311,7 @@ export async function syncBackups(
     if (action === "delete")
       return request(account, `/sync?id=${encodeURIComponent(id!)}`, "DELETE");
     const data = projectSyncData(
-      loadBrowserSnapshot(windowId) as unknown as Record<string, unknown>,
+      rawLoadBrowserSnapshot(windowId) as unknown as Record<string, unknown>,
     );
     const tabIds = new Set(data.tabs.map((tab) => tab.id));
     const groups = data.groups
@@ -338,7 +334,7 @@ export async function syncBackups(
           tabs: data.tabs,
           bookmarks: data.bookmarks,
           groups,
-          workspaces: readBrowserSetting(`sync-workspaces:${windowId}`, []),
+          workspaces: rawReadBrowserSetting(`sync-workspaces:${windowId}`, []),
           preferences: data.preferences[0],
         },
       });
@@ -352,8 +348,8 @@ export async function syncBackups(
     await save(); // A failed safety backup must prevent restore.
     if (getGorthUserId() !== account) throw new Error("Account changed.");
     const state = observeSyncData(journal(account), windowId, {
-        ...loadBrowserSnapshot(windowId),
-        workspaces: readBrowserSetting(`sync-workspaces:${windowId}`, []),
+        ...rawLoadBrowserSnapshot(windowId),
+        workspaces: rawReadBrowserSetting(`sync-workspaces:${windowId}`, []),
       }),
       projected = projectSyncData(backup.data);
     // A manual restore is an explicit new edit; merge by item rather than deleting unrelated items.

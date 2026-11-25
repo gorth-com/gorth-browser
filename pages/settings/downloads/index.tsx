@@ -1,6 +1,6 @@
 import { ErrorFeedback } from "@/components/element/error-feedback";
 import { useEffect, useState } from "react";
-import { Download, FolderOpen } from "@gorth-io/primitive/cores/lucide";
+import { Download, FolderOpen } from "@gorth-com/primitive/cores/lucide";
 import { PageShell } from "@/pages/shared";
 import {
   Card,
@@ -8,9 +8,9 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-} from "@gorth-io/primitive/default/card";
-import { Button } from "@gorth-io/primitive/custom/button";
-import { Switch } from "@gorth-io/primitive/default/switch";
+} from "@gorth-com/primitive/default/card";
+import { Button } from "@gorth-com/primitive/custom/button";
+import { Switch } from "@gorth-com/primitive/default/switch";
 import type { DownloadPreferences } from "@/lib/browser/downloads";
 export function SettingsSectionPage() {
   const [preferences, setPreferences] = useState<DownloadPreferences | null>(

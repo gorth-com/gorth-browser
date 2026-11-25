@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { Gamepad2, RefreshCw, Rocket } from "@gorth-io/primitive/cores/lucide";
-import { Badge } from "@gorth-io/primitive/custom/badge";
-import { Button } from "@gorth-io/primitive/custom/button";
+import { Gamepad2, RefreshCw, Rocket } from "@gorth-com/primitive/cores/lucide";
+import { Badge } from "@gorth-com/primitive/custom/badge";
+import { Button } from "@gorth-com/primitive/custom/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@gorth-io/primitive/default/card";
+} from "@gorth-com/primitive/default/card";
 import { type SpecialPageProps, PageShell } from "@/pages/shared";
 function ErrorPage({
   errorCode,

@@ -2,7 +2,8 @@ import type { BrowserWindow } from "electron";
 import { applyStartupPreferences } from "@/lib/browser/setup";
 import { getSetupPreferences } from "@/main/services/browser-setup";
 const initializedSessions = new WeakSet<BrowserWindow>();
-import { archiveTab, writeBrowserSetting } from "@/services/browser-database";
+import { rawArchiveTab } from "@/models/archived-tab"
+import { rawWriteBrowserSetting } from "@/models/setting"
 import type { BrowserSnapshot, PersistedTab } from "@/lib/browser/persistence";
 import { shouldSleepTab } from "@/lib/browser/lifecycle";
 import {
@@ -35,7 +36,7 @@ export function synchronizeTabSession(
     state.preferences.flags.smoothScrolling !==
     snapshot.preferences.flags.smoothScrolling
   )
-    writeBrowserSetting(
+    rawWriteBrowserSetting(
       "smoothScrolling",
       snapshot.preferences.flags.smoothScrolling,
     );
@@ -243,7 +244,7 @@ export async function archiveBrowserTab(window: BrowserWindow, tabId: string) {
     state.splitTabId === tabId
   )
     return false;
-  archiveTab(tab, state.sessionId);
+  rawArchiveTab(tab, state.sessionId);
   state.archivedTabIds.add(tabId);
   const record = state.views.get(tabId);
   state.views.delete(tabId);

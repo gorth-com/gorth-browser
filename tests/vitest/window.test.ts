@@ -76,7 +76,7 @@ beforeAll(async () => {
     external: ["electron"],
     outfile: path.join(directory, "build/main.cjs"),
     alias: {
-      "@/services/browser-database": services,
+      "@/models/window": services,
       "@/main/services/tab-lifecycle": services,
       "@/main/services/content-blocker": services,
       "@/main/ipc/context-menu": services,

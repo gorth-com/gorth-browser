@@ -1,4 +1,4 @@
-import { z } from "@gorth-io/structure/cores/zod";
+import { z } from "@gorth-com/structure/cores/zod";
 
 export function normalizeActiveSite(input: string): string {
   const url = new URL(input.includes("://") ? input : `https://${input}`);

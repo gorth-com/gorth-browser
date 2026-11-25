@@ -11,7 +11,6 @@ import { getSetupPreferences } from "@/main/services/browser-setup";
 import { MAIN_WINDOW_ID } from "@/utils/constant";
 import { installBrowserLinks } from "@/main/services/browser-links";
 import { registerSetupIpc } from "@/main/ipc/setup";
-import { initializeSecureStorage } from "@/lib/auth/storage";
 import { registerUpdateIpc } from "@/main/services/updates";
 import {
   authScheme,
@@ -41,13 +40,10 @@ import {
   shutdownDownloadManager,
 } from "@/main/services/downloads";
 import started from "electron-squirrel-startup";
-import {
-  closeDatabase,
-  initializeDatabase,
-  loadBrowserSnapshot,
-  getRestoredWindowIds,
-  readBrowserSetting,
-} from "@/services/browser-database";
+import { rawCloseDatabase, rawInitializeDatabase } from "@/services/database"
+import { rawLoadBrowserSnapshot } from "@/models/tab"
+import { rawGetRestoredWindowIds } from "@/models/window"
+import { rawReadBrowserSetting } from "@/models/setting"
 import {
   initializeContentBlocker,
   stopContentBlocker,
@@ -119,12 +115,12 @@ app.on("second-instance", () => {
 });
 // Chromium feature switches must be selected before app readiness.
 if (ownsDataDirectory) {
-  initializeDatabase(app.getPath("userData"));
+  rawInitializeDatabase(app.getPath("userData"));
   initializeSystemStartup();
   if (
-    !readBrowserSetting(
+    !rawReadBrowserSetting(
       "smoothScrolling",
-      loadBrowserSnapshot().preferences.flags.smoothScrolling,
+      rawLoadBrowserSnapshot().preferences.flags.smoothScrolling,
     )
   )
     app.commandLine.appendSwitch("disable-features", "SmoothScrolling");
@@ -154,14 +150,6 @@ app
   .then(async () => {
     if (!ownsDataDirectory) return;
     startSystemPowerMonitor();
-    try {
-      initializeSecureStorage();
-    } catch {
-      dialog.showErrorBox(
-        "Không thể truy cập kho khóa",
-        "Ứng dụng vẫn mở, nhưng phiên đã lưu chưa được mở khóa. Hãy cấp quyền Keychain rồi thử đăng nhập hoặc mở khóa phiên lại. Dữ liệu tài khoản được giữ nguyên.",
-      );
-    }
     await initializeNetworkProxy();
     await startDesktopServer(
       !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
@@ -195,7 +183,7 @@ app
     installApplicationMenu();
     const windowIds =
       getSetupPreferences().startup === "restore"
-        ? getRestoredWindowIds()
+        ? rawGetRestoredWindowIds()
         : [MAIN_WINDOW_ID];
     for (const id of windowIds) createWindow(id);
     try {
@@ -231,7 +219,7 @@ app.on("activate", () => {
 app.on("will-quit", () => {
   shutdownDownloadManager();
   stopContentBlocker();
-  closeDatabase();
+  rawCloseDatabase();
 });
 
 app.on("will-quit", stopDesktopServer);

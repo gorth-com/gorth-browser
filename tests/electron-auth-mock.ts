@@ -83,6 +83,12 @@ export class WebContentsView {
   }
 }
 export const safeStorage = {
+  isAsyncEncryptionAvailable: async () => calls.available,
+  encryptStringAsync: async (value: string) => Buffer.from("TEST-ONLY:" + value),
+  decryptStringAsync: async (value: Buffer) => ({
+    result: safeStorage.decryptString(value),
+    shouldReEncrypt: false,
+  }),
   isEncryptionAvailable: () => calls.available,
   getSelectedStorageBackend: () => "test",
   encryptString: (value: string) => Buffer.from("TEST-ONLY:" + value),

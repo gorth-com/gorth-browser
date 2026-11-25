@@ -1,27 +1,23 @@
 import { app, shell } from "electron";
 import path from "node:path";
-import {
-  readBrowserSetting,
-  writeBrowserSetting,
-  loadBrowserSnapshot,
-  saveBrowserSnapshot,
-} from "@/services/browser-database";
+import { rawReadBrowserSetting, rawWriteBrowserSetting } from "@/models/setting"
+import { rawLoadBrowserSnapshot, rawSaveBrowserSnapshot } from "@/models/tab"
 import {
   setupPreferencesSchema,
   importedBookmarksSchema,
 } from "@/lib/browser/setup";
 
 export function getSetupPreferences() {
-  return setupPreferencesSchema.parse(readBrowserSetting("browserSetup", {}));
+  return setupPreferencesSchema.parse(rawReadBrowserSetting("browserSetup", {}));
 }
 export function saveSetupPreferences(input: unknown) {
   const preferences = setupPreferencesSchema.parse(input);
-  writeBrowserSetting("browserSetup", preferences);
+  rawWriteBrowserSetting("browserSetup", preferences);
   return preferences;
 }
 export function importBookmarks(input: unknown, windowId: string) {
   const imported = importedBookmarksSchema.parse(input);
-  const snapshot = loadBrowserSnapshot(windowId);
+  const snapshot = rawLoadBrowserSnapshot(windowId);
   const urls = new Set(snapshot.bookmarks.map((item) => item.url));
   const additions = imported
     .filter((item) => {
@@ -32,7 +28,7 @@ export function importBookmarks(input: unknown, windowId: string) {
     .map((item) => ({ ...item, id: crypto.randomUUID() }));
   if (snapshot.bookmarks.length + additions.length > 10000)
     throw new Error("Bookmark limit exceeded.");
-  saveBrowserSnapshot(
+  rawSaveBrowserSnapshot(
     { ...snapshot, bookmarks: [...snapshot.bookmarks, ...additions] },
     windowId,
   );

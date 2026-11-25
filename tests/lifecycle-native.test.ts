@@ -6,12 +6,9 @@ import { copyFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { once } from "node:events";
-import {
-  initializeDatabase,
-  closeDatabase,
-  writeBrowserSetting,
-  listArchivedTabs,
-} from "@/services/browser-database";
+import { rawInitializeDatabase, rawCloseDatabase } from "@/services/database"
+import { rawWriteBrowserSetting } from "@/models/setting"
+import { rawListArchivedTabs } from "@/models/archived-tab"
 import { getBrowserState, createTabView } from "@/main/windows/capital";
 import {
   sleepTab,
@@ -54,8 +51,8 @@ void (async () => {
     const port = (server.address() as { port: number }).port;
     const origin = `http://127.0.0.1:${port}`;
     await app.whenReady();
-    initializeDatabase(directory);
-    writeBrowserSetting("shields", {
+    rawInitializeDatabase(directory);
+    rawWriteBrowserSetting("shields", {
       ...defaultShieldPreferences,
       automaticUpdates: false,
       customFilters: "*/gorth-test-ad.js$script\n127.0.0.1##.gorth-test-ad",
@@ -175,7 +172,7 @@ void (async () => {
       "target=_blank must not overwrite its source tab",
     );
     assert.equal(await archiveBrowserTab(window, "background"), true);
-    assert.equal(listArchivedTabs().length, 1);
+    assert.equal(rawListArchivedTabs().length, 1);
     assert.equal(state.views.has("background"), false);
     await window.webContents.executeJavaScript(
       `window.fixture.shields.save(${JSON.stringify({ ...defaultShieldPreferences, automaticUpdates: false, disabledSites: ["127.0.0.1"], customFilters: "*/gorth-test-ad.js$script\n127.0.0.1##.gorth-test-ad" })})`,
@@ -202,7 +199,7 @@ void (async () => {
     clearTimeout(timeout);
     window?.destroy();
     stopContentBlocker();
-    closeDatabase();
+    rawCloseDatabase();
     server.close();
     rmSync(directory, { recursive: true, force: true });
     app.exit(process.exitCode ?? 0);

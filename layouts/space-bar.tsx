@@ -1,5 +1,5 @@
-import { Layers } from "@gorth-io/primitive/cores/lucide";
-import { Button } from "@gorth-io/primitive/custom/button";
+import { Layers } from "@gorth-com/primitive/cores/lucide";
+import { Button } from "@gorth-com/primitive/custom/button";
 
 export function SpaceBar() {
   return (

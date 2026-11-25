@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
-import { RefreshCw } from "@gorth-io/primitive/cores/lucide";
-import { Button } from "@gorth-io/primitive/custom/button";
-import { Switch } from "@gorth-io/primitive/default/switch";
+import { RefreshCw } from "@gorth-com/primitive/cores/lucide";
+import { Button } from "@gorth-com/primitive/custom/button";
+import { Switch } from "@gorth-com/primitive/default/switch";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent,
-} from "@gorth-io/primitive/default/card";
-import { Separator } from "@gorth-io/primitive/default/separator";
+} from "@gorth-com/primitive/default/card";
+import { Separator } from "@gorth-com/primitive/default/separator";
 import { PageShell } from "@/pages/shared";
 import { syncKinds, type SyncOptions } from "@/lib/browser/sync";
 import { toast } from "@/providers/toaster";

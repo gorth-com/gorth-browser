@@ -19,7 +19,7 @@ import {
   ToastViewport,
   toast,
   useToastManager,
-} from "@gorth-io/primitive/custom/toast";
+} from "@gorth-com/primitive/custom/toast";
 
 export type ToastPosition =
   "top-left" | "top-right" | "bottom-left" | "bottom-right";

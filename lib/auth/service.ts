@@ -1,5 +1,5 @@
 import { getRpcRendererUrl, isRpcRendererUrl } from "@/main/rpc/sender";
-import { upsertUserProfile } from "@/services/user-profile";
+import { rawUpsertUserProfile } from "@/models/user-profile";
 import { BrowserWindow, ipcMain } from "electron";
 import {
   openAuthView,
@@ -97,7 +97,7 @@ export function registerAuthIpc() {
         } else if (action === "logout") await signOutGorth();
         else await restoreGorthSession(controller.signal);
         const user = gorthSnapshot().user;
-        if (user) upsertUserProfile(user);
+        if (user) rawUpsertUserProfile(user);
         return { snapshot: { ...snapshot(), busy: false } };
       } catch (error) {
         return {

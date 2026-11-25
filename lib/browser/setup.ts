@@ -1,4 +1,4 @@
-import { z } from "@gorth-io/structure/cores/zod";
+import { z } from "@gorth-com/structure/cores/zod";
 import type { BrowserSnapshot, PersistedTab } from "@/lib/browser/persistence";
 
 export const setupPreferencesSchema = z

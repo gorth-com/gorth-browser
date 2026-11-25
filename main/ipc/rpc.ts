@@ -1,11 +1,7 @@
 import { ipcMain } from "electron";
 import { getWindowFromSender, getBrowserState } from "@/main/windows/capital";
-import {
-  loadBrowserSnapshot,
-  loadTabGroups,
-  saveTabGroup,
-  deleteTabGroup,
-} from "@/services/browser-database";
+import { rawLoadBrowserSnapshot } from "@/models/tab"
+import { rawLoadTabGroups, rawSaveTabGroup, rawDeleteTabGroup } from "@/models/tab-group"
 import { restoreTabSession } from "@/main/services/tab-lifecycle";
 import { desktopRouter } from "@/main/rpc/router";
 import { handleRpcRequest } from "@/main/rpc/transport";
@@ -21,10 +17,10 @@ export function registerRpcIpc() {
       throw new Error("Untrusted desktop RPC sender.");
     const sessionId = getBrowserState(window).sessionId;
     return handleRpcRequest(desktopRouter, input, {
-      load: () => restoreTabSession(window, loadBrowserSnapshot(sessionId)),
-      listGroups: () => loadTabGroups(sessionId),
-      saveGroup: (group) => saveTabGroup(group, sessionId),
-      deleteGroup: (id) => deleteTabGroup(id, sessionId),
+      load: () => restoreTabSession(window, rawLoadBrowserSnapshot(sessionId)),
+      listGroups: () => rawLoadTabGroups(sessionId),
+      saveGroup: (group) => rawSaveTabGroup(group, sessionId),
+      deleteGroup: (id) => rawDeleteTabGroup(id, sessionId),
     } satisfies import("@/main/rpc/router").DesktopContext);
   });
 }

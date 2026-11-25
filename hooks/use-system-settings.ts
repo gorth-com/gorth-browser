@@ -3,7 +3,7 @@ import {
   useQuery,
   useQueryClient,
   useMutation,
-} from "@gorth-io/primitive/cores/tanstack/query";
+} from "@gorth-com/primitive/cores/tanstack/query";
 import type { SystemPreferences } from "@/lib/browser/system";
 import { toast } from "@/providers/toaster";
 

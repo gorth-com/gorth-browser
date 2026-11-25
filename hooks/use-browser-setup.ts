@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import {
   useQuery,
   useQueryClient,
-} from "@gorth-io/primitive/cores/tanstack/query";
+} from "@gorth-com/primitive/cores/tanstack/query";
 
 export function useBrowserSetup() {
   const client = useQueryClient();

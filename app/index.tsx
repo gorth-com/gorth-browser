@@ -13,7 +13,7 @@ import {
 import { PanelBar } from "@/layouts/panel-bar";
 import { SIDEBAR_WIDTH } from "@/utils/constant";
 import { useTRPC, useTRPCClient } from "@/lib/rpc/client";
-import { useQueryClient } from "@gorth-io/primitive/cores/tanstack/query";
+import { useQueryClient } from "@gorth-com/primitive/cores/tanstack/query";
 import type {
   BrowserBookmark,
   BrowserSidebarSide,

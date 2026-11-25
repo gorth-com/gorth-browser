@@ -1,4 +1,21 @@
 // Routing metadata only; SDK PKCE/state verification is not duplicated.
+export function parseDesktopLoginPage(value: string) {
+  try {
+    if (value.length > 4096) return null;
+    const page = new URL(value);
+    if ([...page.searchParams.keys()].some((name) =>
+      !["client_id", "state", "code_challenge"].includes(name))) return null;
+    const route = new URL("com.gorth.browser://auth/open");
+    for (const [name, entry] of page.searchParams) route.searchParams.append(name, entry);
+    page.search = "";
+    route.searchParams.set("url", page.href);
+    // Reuse the same client, origin, path, duplicate and PKCE-shape validation.
+    return parseLoginNavigation(route.href);
+  } catch {
+    return null;
+  }
+}
+
 export function parseLoginNavigation(value: string) {
   try {
     if (value.length > 4096) return null;

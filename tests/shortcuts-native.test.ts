@@ -7,18 +7,15 @@ import {
   registerShortcutsIpc,
   applyShortcutAccelerators,
 } from "@/main/ipc/shortcuts";
-import {
-  initializeDatabase,
-  closeDatabase,
-  readShortcutOverrides,
-} from "@/services/browser-database";
+import { rawInitializeDatabase, rawCloseDatabase } from "@/services/database"
+import { rawReadShortcutOverrides } from "@/models/setting"
 const directory = mkdtempSync(path.join(tmpdir(), "gorth-shortcuts-native-"));
 app.setPath("userData", directory);
 app.setPath("sessionData", directory);
 const actions: string[] = [];
 async function run() {
   await app.whenReady();
-  initializeDatabase(directory);
+  rawInitializeDatabase(directory);
   const refresh = () => {
     const template = [
       {
@@ -65,7 +62,7 @@ async function run() {
     await window.webContents.executeJavaScript(
       "window.electronAPI.shortcuts.update('shortcuts','CmdOrCtrl+Shift+Y')",
     );
-    assert.equal(readShortcutOverrides().shortcuts, "CmdOrCtrl+Shift+Y");
+    assert.equal(rawReadShortcutOverrides().shortcuts, "CmdOrCtrl+Shift+Y");
     await press("K");
     assert.equal(actions.length, 0);
     await press("Y");
@@ -84,7 +81,7 @@ async function run() {
     await window.webContents.executeJavaScript(
       "window.electronAPI.shortcuts.reset()",
     );
-    assert.deepEqual(readShortcutOverrides(), {});
+    assert.deepEqual(rawReadShortcutOverrides(), {});
     actions.length = 0;
     await press("T");
     assert.deepEqual(actions, ["reopen-closed-tab"]);
@@ -93,7 +90,7 @@ async function run() {
     );
   } finally {
     window.destroy();
-    closeDatabase();
+    rawCloseDatabase();
   }
 }
 run()

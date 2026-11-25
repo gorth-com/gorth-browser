@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { useForm } from "@gorth-io/primitive/cores/tanstack/form";
+import { useForm } from "@gorth-com/primitive/cores/tanstack/form";
 import {
   Settings,
   MemoryStick,
@@ -8,19 +8,19 @@ import {
   ExternalLink,
   Trash2,
   Plus,
-} from "@gorth-io/primitive/cores/lucide";
+} from "@gorth-com/primitive/cores/lucide";
 import { PageShell, type SpecialPageProps } from "@/pages/shared";
 import { PageHeading } from "@/components/heading";
 import {
   Card,
   CardTitle,
   CardDescription,
-} from "@gorth-io/primitive/default/card";
-import { Switch } from "@gorth-io/primitive/default/switch";
-import { Input } from "@gorth-io/primitive/default/input";
-import { Separator } from "@gorth-io/primitive/default/separator";
-import { RadioGroup, RadioGroupItem } from "@gorth-io/primitive/custom/radio";
-import { Button } from "@gorth-io/primitive/custom/button";
+} from "@gorth-com/primitive/default/card";
+import { Switch } from "@gorth-com/primitive/default/switch";
+import { Input } from "@gorth-com/primitive/default/input";
+import { Separator } from "@gorth-com/primitive/default/separator";
+import { RadioGroup, RadioGroupItem } from "@gorth-com/primitive/custom/radio";
+import { Button } from "@gorth-com/primitive/custom/button";
 import { ErrorFeedback } from "@/components/element/error-feedback";
 import { useSystemSettings } from "@/hooks/use-system-settings";
 import {

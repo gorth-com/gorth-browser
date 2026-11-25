@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { parseLoginNavigation } from "@/lib/auth/login-navigation";
+import { parseDesktopLoginPage, parseLoginNavigation } from "@/lib/auth/login-navigation";
 function link(changes: Record<string, string> = {}) {
   const url = new URL("com.gorth.browser://auth/open");
   for (const [key, value] of Object.entries({
@@ -37,6 +37,18 @@ const invalidRoutes: Array<Record<string, string>> = [
   { code_challenge: "invalid" },
   { access_token: "never-allowed" },
 ];
+it("validates ordinary HTTP entry with the same rules as explicit Gorth navigation", () => {
+  const page = parseLoginNavigation(link())!.url;
+  expect(parseDesktopLoginPage(page)).toEqual(parseLoginNavigation(link()));
+  for (const suffix of [
+    "&url=https://evil.test/auth/desktop",
+    "&state=duplicate",
+    "&access_token=secret",
+    "#fragment",
+  ]) expect(parseDesktopLoginPage(page + suffix)).toBeNull();
+  expect(parseDesktopLoginPage(page.replace("https:", "http:"))).toBeNull();
+  expect(parseDesktopLoginPage(page.replace("/auth/desktop?", "/auth/desktop/complete?"))).toBeNull();
+});
 it.each(invalidRoutes)("rejects untrusted navigation input %j", (changes) => {
   expect(parseLoginNavigation(link(changes))).toBeNull();
 });

@@ -1,4 +1,4 @@
-import type { ShortcutDefinition } from "@gorth-io/structure/modules/desktop";
+import type { ShortcutDefinition } from "@gorth-com/structure/modules/desktop";
 import {
   Rocket,
   Palette,
@@ -36,7 +36,7 @@ import {
   Globe2,
   History,
   Maximize,
-} from "@gorth-io/primitive/cores/lucide";
+} from "@gorth-com/primitive/cores/lucide";
 import type { Theme } from "@/lib/theme";
 import type { BrowserInternalPage } from "@/lib/browser/internal-pages";
 import type { DownloadState } from "@/lib/browser/downloads";

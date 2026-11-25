@@ -1,11 +1,11 @@
 import {
   PanelLeftClose,
   PanelRightClose,
-} from "@gorth-io/primitive/cores/lucide";
+} from "@gorth-com/primitive/cores/lucide";
 import type { BrowserSidebarSide } from "@/components/dashboard/bookmarks";
-import { Button } from "@gorth-io/primitive/custom/button";
+import { Button } from "@gorth-com/primitive/custom/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/providers/tooltip";
-import { cn } from "@gorth-io/primitive/cores/cn";
+import { cn } from "@gorth-com/primitive/cores/cn";
 
 interface PanelBarProps {
   side: BrowserSidebarSide;

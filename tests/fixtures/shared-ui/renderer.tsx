@@ -6,11 +6,11 @@ import { createRoot } from "react-dom/client";
 import {
   QueryClient,
   QueryClientProvider,
-} from "@gorth-io/primitive/cores/tanstack/query";
+} from "@gorth-com/primitive/cores/tanstack/query";
 import { PageHeading } from "@/components/heading";
-import { Settings } from "@gorth-io/primitive/cores/lucide";
-import { SidebarProvider } from "@gorth-io/primitive/custom/sidebar";
-import { Button } from "@gorth-io/primitive/custom/button";
+import { Settings } from "@gorth-com/primitive/cores/lucide";
+import { SidebarProvider } from "@gorth-com/primitive/custom/sidebar";
+import { Button } from "@gorth-com/primitive/custom/button";
 import { Dashboard } from "@/layouts/dashboard";
 import { AuthContext, useAuth } from "@/hooks/use-auth";
 import { PortalProvider } from "@/providers/portal";

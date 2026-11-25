@@ -56,7 +56,7 @@ Tên `rollup.config.ts` và `rolldown.config.ts` không chứng minh hai pipelin
 ### 3.1. Những điểm Gorth đang làm đúng
 
 - Website views dùng `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`, không mang application preload. SSO dùng view/partition riêng. [Webview](../main/windows/webview.ts), [auth view](../main/services/auth-view.ts).
-- DB và filesystem nằm main/services; renderer dùng bridge, không import SQLite runtime để tự truy cập file. [Database IPC](../main/ipc/database.ts), [database service](../services/browser-database.ts).
+- DB và filesystem nằm main/services; renderer dùng bridge, không import SQLite runtime để tự truy cập file. [Database IPC](../main/ipc/database.ts), [database service](../models/setting.ts).
 - Portal UI đã dùng React portal vào native surface riêng, không chỉ tăng CSS `z-index` dưới web content. [Portal provider](../providers/portal.tsx), [native portal host](../main/windows/portal.ts).
 - Có renderer hydration gate và màn hình loading thay vì render home mặc định trước khi đọc session. [Application](../app/index.tsx), [LoadingScreen](../components/element/loading-screen.tsx).
 - Có schema Zod và giới hạn dữ liệu tại một số boundary; tRPC kiểm tra sender, main frame và URL renderer. [Session schema](../lib/browser/session-schema.ts), [RPC IPC](../main/ipc/rpc.ts).
@@ -93,7 +93,7 @@ Hướng nên học: xác định main là nguồn sự thật cho các thao tá
 | Spaces/workspaces              | Placeholder trong native menu | Có                                                | Gorth “Default Space” là item disabled; không có CRUD/model Spaces.                                      |
 | Incognito                      | Chưa có                       | Có                                                | Flow tạo ephemeral profile/session và dọn khi cửa sổ cuối đóng.                                          |
 
-Nguồn Gorth: [Application](../app/index.tsx), [tabs UI](../components/element/browser-tabs.tsx), [vertical tabs](../layouts/vertical-tabs.tsx), [database](../services/browser-database.ts), [lifecycle](../main/services/tab-lifecycle.ts), [webview bounds](../main/windows/webview.ts), [application menu](../main/ipc/application-menu.ts).
+Nguồn Gorth: [Application](../app/index.tsx), [tabs UI](../components/element/browser-tabs.tsx), [vertical tabs](../layouts/vertical-tabs.tsx), [database](../models/setting.ts), [lifecycle](../main/services/tab-lifecycle.ts), [webview bounds](../main/windows/webview.ts), [application menu](../main/ipc/application-menu.ts).
 
 Nguồn Flow: [tabs controller](../packages/flow-browser/src/main/controllers/tabs-controller/index.ts), [recently closed](../packages/flow-browser/src/main/controllers/tabs-controller/recently-closed.ts), [recently closed manager](../packages/flow-browser/src/main/controllers/tabs-controller/recently-closed-manager.ts), [drag tab group](../packages/flow-browser/src/renderer/src/components/browser-ui/browser-sidebar/_components/tab-group.tsx), [split layout](../packages/flow-browser/src/main/controllers/tabs-controller/tab-layout.ts), [flags](../packages/flow-browser/src/main/modules/flags.ts), [incognito](../packages/flow-browser/src/main/modules/incognito/windows.ts), [Spaces](../packages/flow-browser/src/main/controllers/spaces-controller/raw.ts).
 
@@ -143,7 +143,7 @@ Nguồn Flow: [omnibox suggestor](../packages/flow-browser/src/renderer/src/lib/
 | App auto-update                 | Chưa có                                             | Có                                                     | `publish` Forge không tự tạo updater runtime.                                                        |
 | Packaging/signing/notarization  | Có packaging, chưa thấy signing/notarization config | Có cấu hình release chi tiết                           | Không khẳng định đã ký/phát hành thành công chỉ từ config.                                           |
 
-Nguồn Gorth: [DB/schema](../database/schema.ts), [DB operations](../services/browser-database.ts), [downloads](../main/services/downloads.ts), [downloads UI](../pages/downloads/index.tsx), [blocker](../main/services/content-blocker.ts), [Shields settings](../pages/settings/shields/index.tsx), [extensions placeholder](../pages/extensions/index.tsx), [SSO](../lib/auth/gorth.ts), [vault](../lib/auth/vault.ts), [shortcuts](../main/ipc/shortcuts.ts), [Forge](../forge.config.ts).
+Nguồn Gorth: [DB/schema](../database/schema.ts), [DB operations](../models/setting.ts), [downloads](../main/services/downloads.ts), [downloads UI](../pages/downloads/index.tsx), [blocker](../main/services/content-blocker.ts), [Shields settings](../pages/settings/shields/index.tsx), [extensions placeholder](../pages/extensions/index.tsx), [SSO](../lib/auth/gorth.ts), [vault](../lib/auth/vault.ts), [shortcuts](../main/ipc/shortcuts.ts), [Forge](../forge.config.ts).
 
 Nguồn Flow: [DB schema](../packages/flow-browser/src/main/saving/db/schema.ts), [content blocker](../packages/flow-browser/src/main/modules/content-blocker.ts), [session permissions](../packages/flow-browser/src/main/controllers/sessions-controller/handlers/index.ts), [loaded profile/extensions](../packages/flow-browser/src/main/controllers/loaded-profiles-controller/index.ts), [extension manager](../packages/flow-browser/src/main/modules/extensions/management.ts), [web context menu](../packages/flow-browser/src/main/controllers/tabs-controller/context-menu.ts), [default browser](../packages/flow-browser/src/main/controllers/default-browser-controller/index.ts), [OS URL handling](../packages/flow-browser/src/main/app/urls.ts), [Handoff](../packages/flow-browser/src/main/controllers/handoff-controller/index.ts), [updater](../packages/flow-browser/src/main/controllers/auto-update-controller/index.ts), [release config](../packages/flow-browser/electron-builder.ts).
 
@@ -199,7 +199,7 @@ Các mức ưu tiên dưới đây là ưu tiên kỹ thuật theo impact; khôn
 
 ### P1-03 — Schema Drizzle và migration runtime có hai nguồn định nghĩa
 
-**Bằng chứng:** có `drizzle.config.ts` và `database/schema.ts`, nhưng `initializeDatabase` tạo/alter phần lớn tables bằng SQL thủ công và `PRAGMA table_info`; `database/migrations` chỉ có migration user profiles dạng TypeScript, không thấy runtime gọi Drizzle migrator cho toàn DB. [Drizzle config](../drizzle.config.ts), [schema](../database/schema.ts), [bootstrap DB](../services/browser-database.ts).
+**Bằng chứng:** có `drizzle.config.ts` và `database/schema.ts`, nhưng `initializeDatabase` tạo/alter phần lớn tables bằng SQL thủ công và `PRAGMA table_info`; `database/migrations` chỉ có migration user profiles dạng TypeScript, không thấy runtime gọi Drizzle migrator cho toàn DB. [Drizzle config](../drizzle.config.ts), [schema](../database/schema.ts), [bootstrap DB](../models/setting.ts).
 
 **Ảnh hưởng:** generate migration không tự bảo đảm app áp dụng migration; dễ lệch schema khi đổi kiểu/cột/index. `foreign_keys = ON` không tự sinh FK: nhiều ID quan hệ trong schema chưa có `.references(...)`.
 
@@ -207,7 +207,7 @@ Các mức ưu tiên dưới đây là ưu tiên kỹ thuật theo impact; khôn
 
 ### P1-04 — Persistence vẫn phụ thuộc snapshot renderer và sync flush
 
-**Bằng chứng:** state chính ở `Application`; save snapshot debounce 250 ms, `void ...save(...)` không có catch tại effect; `beforeunload` dùng sync flush. DB transaction xóa/reinsert toàn bộ open tabs của cửa sổ. Window close hủy view với `waitForBeforeUnload: false`. [Application](../app/index.tsx), [database service](../services/browser-database.ts), [destroy view](../main/windows/webview.ts), [close window](../main/windows/capital.ts).
+**Bằng chứng:** state chính ở `Application`; save snapshot debounce 250 ms, `void ...save(...)` không có catch tại effect; `beforeunload` dùng sync flush. DB transaction xóa/reinsert toàn bộ open tabs của cửa sổ. Window close hủy view với `waitForBeforeUnload: false`. [Application](../app/index.tsx), [database service](../models/setting.ts), [destroy view](../main/windows/webview.ts), [close window](../main/windows/capital.ts).
 
 **Ảnh hưởng:** có cửa sổ mất thay đổi chưa flush khi crash; lỗi save nền chưa có phản hồi UI; một lần tab update có thể kéo theo serialize/save snapshot lớn. Khi đóng tab có form chưa lưu, protection của sleeping không đồng nghĩa có beforeunload confirmation khi close.
 
@@ -223,7 +223,7 @@ Các mức ưu tiên dưới đây là ưu tiên kỹ thuật theo impact; khôn
 
 ### P2-02 — Reopen closed tab giữ record nhưng chưa phục hồi đầy đủ
 
-**Bằng chứng:** DB lưu `PersistedTab` gồm navigation history, nhưng `reopenClosedTab` lại gọi `tabs.navigate(id, closed.url)` cho website; navigate xóa `metadata.navigation`. Entry không chứa group snapshot/old position và renderer append tab ở cuối. [reopen flow](../app/index.tsx), [navigation IPC](../main/ipc/browser.ts), [recently closed DB](../services/browser-database.ts).
+**Bằng chứng:** DB lưu `PersistedTab` gồm navigation history, nhưng `reopenClosedTab` lại gọi `tabs.navigate(id, closed.url)` cho website; navigate xóa `metadata.navigation`. Entry không chứa group snapshot/old position và renderer append tab ở cuối. [reopen flow](../app/index.tsx), [navigation IPC](../main/ipc/browser.ts), [recently closed DB](../models/setting.ts).
 
 **Ảnh hưởng:** Cmd/Ctrl+Shift+T mở lại được website nhưng không bảo đảm Back/Forward cũ, vị trí cũ hay group membership. Khôi phục pinned/muted metadata không tương đương khôi phục toàn bộ phiên tab.
 
@@ -241,7 +241,7 @@ Các mức ưu tiên dưới đây là ưu tiên kỹ thuật theo impact; khôn
 
 ### P2-04 — Chia sẻ bookmark/history giữa cửa sổ chưa có live synchronization
 
-**Bằng chứng:** `sharedBaselines` áp delta theo từng window, tránh snapshot cũ xóa dữ liệu mới. Renderer còn giữ arrays riêng; không thấy subscription cập nhật bookmark/history giữa các cửa sổ. Preferences shell lưu theo window, trong khi Shields/downloads/shortcuts là shared. [Database service](../services/browser-database.ts), [Application](../app/index.tsx).
+**Bằng chứng:** `sharedBaselines` áp delta theo từng window, tránh snapshot cũ xóa dữ liệu mới. Renderer còn giữ arrays riêng; không thấy subscription cập nhật bookmark/history giữa các cửa sổ. Preferences shell lưu theo window, trong khi Shields/downloads/shortcuts là shared. [Database service](../models/setting.ts), [Application](../app/index.tsx).
 
 **Ảnh hưởng:** đã tránh một lớp ghi đè dữ liệu, nhưng UI cửa sổ khác có thể không thấy thay đổi ngay; semantics settings chưa hoàn toàn đồng nhất.
 
@@ -249,7 +249,7 @@ Các mức ưu tiên dưới đây là ưu tiên kỹ thuật theo impact; khôn
 
 ### P2-05 — History là danh sách đơn giản, chưa có retention/domain model đầy đủ
 
-**Bằng chứng:** history được thêm từ React khi tab URL thay đổi; load giới hạn 2.000 entry, save chỉ lấy 2.000 entry đầu; không thấy job prune theo retention như Flow. [Application](../app/index.tsx), [DB history](../services/browser-database.ts).
+**Bằng chứng:** history được thêm từ React khi tab URL thay đổi; load giới hạn 2.000 entry, save chỉ lấy 2.000 entry đầu; không thấy job prune theo retention như Flow. [Application](../app/index.tsx), [DB history](../models/setting.ts).
 
 **Ảnh hưởng:** số entry load không chứng minh DB bị giới hạn tương ứng; old visits có thể còn lưu mà UI không load. Chưa có visit/typed count để xếp hạng omnibox. Việc restore cập nhật tab cũng cần test không tạo visit giả.
 

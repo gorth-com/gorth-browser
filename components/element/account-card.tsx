@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { ErrorFeedback } from "@/components/element/error-feedback";
 import { NavIdentity } from "@/components/dashboard/nav-identity";
-import { Badge } from "@gorth-io/primitive/custom/badge";
+import { Badge } from "@gorth-com/primitive/custom/badge";
 import {
   User,
   LogIn,
@@ -10,18 +10,18 @@ import {
   LogOut,
   Unlock,
   X,
-} from "@gorth-io/primitive/cores/lucide";
+} from "@gorth-com/primitive/cores/lucide";
 import { useAuth } from "@/hooks/use-auth";
 import { useBrowserSetup } from "@/hooks/use-browser-setup";
-import { Button } from "@gorth-io/primitive/custom/button";
+import { Button } from "@gorth-com/primitive/custom/button";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
   CardDescription,
-} from "@gorth-io/primitive/default/card";
-import { Separator } from "@gorth-io/primitive/default/separator";
+} from "@gorth-com/primitive/default/card";
+import { Separator } from "@gorth-com/primitive/default/separator";
 
 export function AccountCard({ children }: { children?: ReactNode }) {
   const profileName = useBrowserSetup().data?.profileName ?? "Personal";

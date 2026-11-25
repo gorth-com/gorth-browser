@@ -30,7 +30,7 @@ vi.mock("@/main/rpc/sender", async (importOriginal) => ({
   getRpcRendererUrl: () => "http://localhost:5501/public/index.html",
 }));
 vi.mock("electron", () => import("./electron-auth-mock"));
-vi.mock("@/services/user-profile", () => ({ upsertUserProfile: vi.fn() }));
+vi.mock("@/models/user-profile", () => ({ rawUpsertUserProfile: vi.fn() }));
 const native = vi.hoisted(() => ({
   user: null as null | {
     id: string;

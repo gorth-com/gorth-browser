@@ -1,7 +1,7 @@
 import path from "node:path";
 import { app, BrowserWindow } from "electron";
 import { setTimeout as delay } from "node:timers/promises";
-import { initializeDatabase, closeDatabase } from "@/services/browser-database";
+import { rawInitializeDatabase, rawCloseDatabase } from "@/services/database"
 import {
   getSystemPreferences,
   saveSystemPreferences,
@@ -20,7 +20,7 @@ if (
   throw new Error("Isolated profile required");
 app.setPath("userData", path.join(directory, "profile"));
 app.setPath("sessionData", path.join(directory, "profile"));
-initializeDatabase(app.getPath("userData"));
+rawInitializeDatabase(app.getPath("userData"));
 initializeSystemStartup();
 registerSystemIpc();
 const errors: string[] = [];
@@ -117,8 +117,8 @@ void (async () => {
     );
     await run('document.querySelector("[value=unplugged]").click()');
     await wait(async () => getSystemPreferences().energyMode === "unplugged");
-    closeDatabase();
-    initializeDatabase(app.getPath("userData"));
+    rawCloseDatabase();
+    rawInitializeDatabase(app.getPath("userData"));
     result.persisted =
       getSystemPreferences().energyMode === "unplugged" &&
       !getSystemPreferences().hardwareAcceleration;
@@ -172,7 +172,7 @@ void (async () => {
   } finally {
     saveSystemPreferences({ ...getSystemPreferences(), warnQuit: false });
     window?.destroy();
-    closeDatabase();
+    rawCloseDatabase();
     app.exit(0);
   }
 })();

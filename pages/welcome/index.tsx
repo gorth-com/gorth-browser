@@ -3,15 +3,15 @@ import {
   Rocket,
   Search,
   Sparkles,
-} from "@gorth-io/primitive/cores/lucide";
-import { Button } from "@gorth-io/primitive/custom/button";
+} from "@gorth-com/primitive/cores/lucide";
+import { Button } from "@gorth-com/primitive/custom/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@gorth-io/primitive/default/card";
+} from "@gorth-com/primitive/default/card";
 import { PageShell, type SpecialPageProps } from "@/pages/shared";
 
 function WelcomePage({

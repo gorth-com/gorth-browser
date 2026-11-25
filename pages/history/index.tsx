@@ -1,16 +1,16 @@
-import { Clock3, Trash2 } from "@gorth-io/primitive/cores/lucide";
+import { Clock3, Trash2 } from "@gorth-com/primitive/cores/lucide";
 import { useMemo } from "react";
-import type { ColumnDef } from "@gorth-io/primitive/cores/tanstack/table";
+import type { ColumnDef } from "@gorth-com/primitive/cores/tanstack/table";
 import { DataTable, dataTableFeatures } from "@/components/custom/data-table";
-import { Button } from "@gorth-io/primitive/custom/button";
+import { Button } from "@gorth-com/primitive/custom/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@gorth-io/primitive/default/card";
-import { Separator } from "@gorth-io/primitive/default/separator";
+} from "@gorth-com/primitive/default/card";
+import { Separator } from "@gorth-com/primitive/default/separator";
 import { formatDateTime } from "@/utils/formatter";
 import {
   type BrowserHistoryItem,

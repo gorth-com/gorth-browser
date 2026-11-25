@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, X } from "@gorth-io/primitive/cores/lucide";
+import { ChevronDown, ChevronUp, X } from "@gorth-com/primitive/cores/lucide";
 
-import { Button } from "@gorth-io/primitive/custom/button";
-import { Input } from "@gorth-io/primitive/default/input";
+import { Button } from "@gorth-com/primitive/custom/button";
+import { Input } from "@gorth-com/primitive/default/input";
 
 interface FindInPageProps {
   tabId: string;

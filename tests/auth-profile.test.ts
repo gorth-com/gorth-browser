@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { registerAuthIpc, getAuthenticatedUserId } from "@/lib/auth/service";
-import { getUserProfile } from "@/services/user-profile";
+import { rawGetUserProfile } from "@/models/user-profile";
 import { calls, handlers, frame, sender } from "./electron-auth-mock";
 import { directory } from "./electron-auth-mock";
 import { readFile, writeFile } from "node:fs/promises";
@@ -32,11 +32,11 @@ test("Verified login/refresh synchronize SQLite profiles; logout clears identity
   assert.equal(calls.decrypt, 0);
   assert.equal(loggedIn.snapshot.locked, false);
   assert.equal(getAuthenticatedUserId(), "verified-subject");
-  const before = getUserProfile("verified-subject")!;
+  const before = rawGetUserProfile("verified-subject")!;
   assert.equal(before.email, "before@example.test");
   const refreshed = await command("refresh");
   assert(!refreshed.error);
-  const after = getUserProfile("verified-subject")!;
+  const after = rawGetUserProfile("verified-subject")!;
   assert.equal(after.name, "After");
   assert.equal(after.email, "after@example.test");
   assert.equal(after.username, "changed");
@@ -44,8 +44,8 @@ test("Verified login/refresh synchronize SQLite profiles; logout clears identity
   assert.equal(after.createdAt, before.createdAt);
   assert(!JSON.stringify(after).includes("PRIVATE-"));
   assert(!JSON.stringify(calls.snapshots).includes("PRIVATE-"));
-  assert.equal(getUserProfile("unverified-renderer-id"), null);
+  assert.equal(rawGetUserProfile("unverified-renderer-id"), null);
   await command("logout");
   assert.equal(getAuthenticatedUserId(), null);
-  assert.equal(getUserProfile("verified-subject")?.name, "After");
+  assert.equal(rawGetUserProfile("verified-subject")?.name, "After");
 });

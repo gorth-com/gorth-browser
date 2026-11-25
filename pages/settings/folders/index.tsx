@@ -1,4 +1,4 @@
-import { Folder } from "@gorth-io/primitive/cores/lucide";
+import { Folder } from "@gorth-com/primitive/cores/lucide";
 import { PageShell } from "@/pages/shared";
 import { FoldersCard } from "@/components/element/folders-card";
 export function FoldersPage() {

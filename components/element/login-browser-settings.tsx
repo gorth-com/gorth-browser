@@ -1,6 +1,6 @@
 import { ErrorFeedback } from "@/components/element/error-feedback";
 import { useState } from "react";
-import { Button } from "@gorth-io/primitive/custom/button";
+import { Button } from "@gorth-com/primitive/custom/button";
 import { useAuth } from "@/hooks/use-auth";
 
 export function LoginBrowserSettings() {

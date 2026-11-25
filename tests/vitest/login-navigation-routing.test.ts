@@ -84,6 +84,32 @@ it("returns Launcher callbacks to its OS handler, not to Browser's SDK session",
   );
   expect(f.callback).not.toHaveBeenCalled();
 });
+it.each(["gorth-browser", "gorth-launcher"])("routes %s callbacks after ordinary HTTP login navigation", async (client) => {
+  const m = await import("@/main/services/login-navigation");
+  m.registerLoginNavigation(f.callback);
+  const page = new URL("http://localhost:5503/auth/desktop");
+  page.searchParams.set("client_id", client);
+  page.searchParams.set("state", "a".repeat(16));
+  page.searchParams.set("code_challenge", "b".repeat(43));
+  f.origin = "http://localhost:5503/auth/desktop/complete";
+  const scheme = client === "gorth-browser" ? "com.gorth.browser" : "com.gorth.launcher";
+  const url = scheme + "://auth/callback#token=fixture";
+  m.routeLoginCallback(contents(), url);
+  expect(f.callback).not.toHaveBeenCalled();
+  expect(f.external).not.toHaveBeenCalled();
+  expect(m.trackDesktopLoginPage(page.href)).toBe(true);
+  m.routeLoginCallback(contents(), url);
+  expect(client === "gorth-browser" ? f.callback : f.external).toHaveBeenCalledExactlyOnceWith(url);
+});
+
+it("does not authorize native callbacks from a complete page or malformed HTTP entry", async () => {
+  const m = await import("@/main/services/login-navigation");
+  for (const page of [
+    "https://launcher.example.test/auth/desktop/complete",
+    "http://localhost:5503/auth/desktop?client_id=gorth-browser&state=bad",
+    "https://launcher.example.test/auth/desktop?url=https://evil.test",
+  ]) expect(m.trackDesktopLoginPage(page)).toBe(false);
+});
 it("delivers Browser callbacks to its existing SDK pending attempt", async () => {
   const m = await import("@/main/services/login-navigation");
   m.registerLoginNavigation(f.callback);

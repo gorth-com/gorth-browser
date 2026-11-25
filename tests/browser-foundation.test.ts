@@ -4,23 +4,12 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import {
-  initializeDatabase,
-  closeDatabase,
-  loadBrowserSnapshot,
-  saveBrowserSnapshot,
-  saveTabGroup,
-  loadTabGroups,
-  addRecentlyClosedTab,
-  popRecentlyClosedTab,
-  saveWindowState,
-  loadWindowState,
-  getRestoredWindowIds,
-  setWindowOpen,
-  archiveTab,
-  listArchivedTabs,
-  restoreArchivedTab,
-} from "@/services/browser-database";
+import { rawInitializeDatabase, rawCloseDatabase } from "@/services/database"
+import { rawLoadBrowserSnapshot, rawSaveBrowserSnapshot } from "@/models/tab"
+import { rawSaveTabGroup, rawLoadTabGroups } from "@/models/tab-group"
+import { rawAddRecentlyClosedTab, rawPopRecentlyClosedTab } from "@/models/recently-closed"
+import { rawSaveWindowState, rawLoadWindowState, rawGetRestoredWindowIds, rawSetWindowOpen } from "@/models/window"
+import { rawArchiveTab, rawListArchivedTabs, rawRestoreArchivedTab } from "@/models/archived-tab"
 import { type PersistedTab } from "@/lib/browser/persistence";
 import { shouldSleepTab } from "@/lib/browser/lifecycle";
 import { isSiteExcluded, normalizeSite } from "@/lib/browser/shields";
@@ -53,9 +42,9 @@ test("Independent multiwindow sessions, shared-data deltas, recently closed, gro
     internalPage: null,
   });
   try {
-    initializeDatabase(directory);
-    const a = loadBrowserSnapshot("main");
-    const b = loadBrowserSnapshot("second");
+    rawInitializeDatabase(directory);
+    const a = rawLoadBrowserSnapshot("main");
+    const b = rawLoadBrowserSnapshot("second");
     a.tabs = [makeTab("a"), makeTab("b")];
     a.activeTabId = "a";
     a.bookmarks = [{ id: "bookmark-a", title: "A", url: "https://a.example" }];
@@ -80,16 +69,16 @@ test("Independent multiwindow sessions, shared-data deltas, recently closed, gro
         visitedAt: 2,
       },
     ];
-    saveBrowserSnapshot(a, "main");
-    saveBrowserSnapshot(b, "second");
-    saveBrowserSnapshot(a, "main");
-    saveTabGroup(
+    rawSaveBrowserSnapshot(a, "main");
+    rawSaveBrowserSnapshot(b, "second");
+    rawSaveBrowserSnapshot(a, "main");
+    rawSaveTabGroup(
       { id: "g", name: "Work", mode: "normal", tabIds: ["a", "b"] },
       "main",
     );
-    assert.equal(loadTabGroups("second").length, 0);
+    assert.equal(rawLoadTabGroups("second").length, 0);
     assert.throws(() =>
-      saveTabGroup(
+      rawSaveTabGroup(
         {
           id: "g",
           name: "Cannot steal a group",
@@ -99,55 +88,55 @@ test("Independent multiwindow sessions, shared-data deltas, recently closed, gro
         "second",
       ),
     );
-    assert.equal(loadTabGroups("main").length, 1);
-    const shared = loadBrowserSnapshot("third");
+    assert.equal(rawLoadTabGroups("main").length, 1);
+    const shared = rawLoadBrowserSnapshot("third");
     assert.equal(shared.bookmarks.length, 2);
     assert.equal(shared.history.length, 2);
     assert.equal(shared.tabs.length, 0);
     a.bookmarks = [];
     a.history = [];
-    saveBrowserSnapshot(a, "main");
+    rawSaveBrowserSnapshot(a, "main");
     assert.deepEqual(
-      loadBrowserSnapshot("third").bookmarks.map((row) => row.id),
+      rawLoadBrowserSnapshot("third").bookmarks.map((row) => row.id),
       ["bookmark-c"],
     );
     assert.deepEqual(
-      loadBrowserSnapshot("third").history.map((row) => row.id),
+      rawLoadBrowserSnapshot("third").history.map((row) => row.id),
       ["visit-c"],
     );
-    addRecentlyClosedTab(b.tabs[0], "second");
-    assert.equal(popRecentlyClosedTab("main"), null);
-    assert.equal(popRecentlyClosedTab("second")?.id, "c");
-    saveWindowState(
+    rawAddRecentlyClosedTab(b.tabs[0], "second");
+    assert.equal(rawPopRecentlyClosedTab("main"), null);
+    assert.equal(rawPopRecentlyClosedTab("second")?.id, "c");
+    rawSaveWindowState(
       { x: 20, y: 20, width: 1280, height: 720, isMaximized: false },
       "main",
     );
-    saveWindowState(
+    rawSaveWindowState(
       { x: 40, y: 40, width: 1920, height: 1080, isMaximized: true },
       "second",
     );
-    assert.equal(loadWindowState("main")?.width, 1280);
-    assert.equal(loadWindowState("second")?.width, 1920);
-    assert.deepEqual(getRestoredWindowIds().sort(), ["main", "second"]);
-    setWindowOpen("second", false);
-    assert.deepEqual(getRestoredWindowIds(), ["main"]);
-    archiveTab(a.tabs[1], "main");
-    saveBrowserSnapshot(a, "main"); // Stale window snapshots must not revive archives.
+    assert.equal(rawLoadWindowState("main")?.width, 1280);
+    assert.equal(rawLoadWindowState("second")?.width, 1920);
+    assert.deepEqual(rawGetRestoredWindowIds().sort(), ["main", "second"]);
+    rawSetWindowOpen("second", false);
+    assert.deepEqual(rawGetRestoredWindowIds(), ["main"]);
+    rawArchiveTab(a.tabs[1], "main");
+    rawSaveBrowserSnapshot(a, "main"); // Stale window snapshots must not revive archives.
     assert.deepEqual(
-      loadBrowserSnapshot("main").tabs.map((tab) => tab.id),
+      rawLoadBrowserSnapshot("main").tabs.map((tab) => tab.id),
       ["a"],
     );
-    closeDatabase();
-    initializeDatabase(directory);
-    assert.equal(listArchivedTabs().length, 1);
-    const restored = restoreArchivedTab("b", "second");
+    rawCloseDatabase();
+    rawInitializeDatabase(directory);
+    assert.equal(rawListArchivedTabs().length, 1);
+    const restored = rawRestoreArchivedTab("b", "second");
     assert.notEqual(restored?.id, "b");
     assert.equal(restored?.url, "https://b.example");
-    assert.equal(listArchivedTabs().length, 0);
-    assert.equal(loadBrowserSnapshot("second").tabs.length, 2);
-    assert.equal(loadBrowserSnapshot("main").tabs.length, 1);
+    assert.equal(rawListArchivedTabs().length, 0);
+    assert.equal(rawLoadBrowserSnapshot("second").tabs.length, 2);
+    assert.equal(rawLoadBrowserSnapshot("main").tabs.length, 1);
   } finally {
-    closeDatabase();
+    rawCloseDatabase();
     rmSync(directory, { recursive: true, force: true });
   }
 });

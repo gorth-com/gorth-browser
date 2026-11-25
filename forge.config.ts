@@ -1,4 +1,7 @@
 import type { ForgeConfig } from "@electron-forge/shared-types";
+import { PublisherGitHub } from "@electron-forge/publisher-github";
+import { githubPublisherConfig } from "./.github/scripts/github-publisher.js";
+import packageJSON from "./package.json" with { type: "json" };
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -13,13 +16,6 @@ import { VitePlugin } from "@electron-forge/plugin-vite";
 import { AutoUnpackNativesPlugin } from "@electron-forge/plugin-auto-unpack-natives";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
-
-const appIcon =
-  process.platform === "darwin"
-    ? "public/favicon.icns"
-    : process.platform === "win32"
-      ? "public/favicon.ico"
-      : "public/favicon.png";
 
 const config: ForgeConfig = {
   hooks: {
@@ -46,7 +42,11 @@ const config: ForgeConfig = {
       { name: "Web browsing", schemes: ["http", "https"] },
     ],
     executableName: "Gorth Browser",
-    icon: appIcon,
+    icon: process.platform === "darwin"
+      ? "public/favicon.icns"
+      : process.platform === "win32"
+        ? "public/favicon.ico"
+        : "public/favicon.png",
     ignore: (filePath) => {
       if (!filePath) {
         return false;
@@ -81,6 +81,9 @@ const config: ForgeConfig = {
     new MakerDeb({
       options: { name: "gorth-browser", productName: "Gorth Browser" },
     }),
+  ],
+  publishers: [
+    new PublisherGitHub(githubPublisherConfig("gorth-browser", packageJSON.version)),
   ],
   plugins: [
     new AutoUnpackNativesPlugin({}),

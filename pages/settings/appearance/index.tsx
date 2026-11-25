@@ -1,5 +1,5 @@
-import { Separator } from "@gorth-io/primitive/default/separator";
-import { Palette } from "@gorth-io/primitive/cores/lucide";
+import { Separator } from "@gorth-com/primitive/default/separator";
+import { Palette } from "@gorth-com/primitive/cores/lucide";
 import { ThemeToggle } from "@/components/element/theme-toggle";
 import { ToastSettings } from "@/components/element/toast-settings";
 import { SidebarSettings } from "@/components/element/sidebar-settings";
@@ -7,12 +7,12 @@ import {
   Card,
   CardTitle,
   CardDescription,
-} from "@gorth-io/primitive/default/card";
-import { Switch } from "@gorth-io/primitive/default/switch";
+} from "@gorth-com/primitive/default/card";
+import { Switch } from "@gorth-com/primitive/default/switch";
 import {
   RadioGroup,
   RadioGroupItem,
-} from "@gorth-io/primitive/default/radio-group";
+} from "@gorth-com/primitive/default/radio-group";
 import type { SpecialPageProps } from "@/pages/shared";
 import { Wrapper } from "@/layouts/wrapper";
 import { PageHeading } from "@/components/heading";

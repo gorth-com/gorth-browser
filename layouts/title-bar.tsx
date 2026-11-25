@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { BrowserToolbar } from "@/layouts/address-bar";
-import { ChevronDown, Plus, Zap } from "@gorth-io/primitive/cores/lucide";
+import { ChevronDown, Plus, Zap } from "@gorth-com/primitive/cores/lucide";
 
 import {
   BrowserTabs,
   type BrowserTabItem,
 } from "@/components/element/browser-tabs";
-import { Button } from "@gorth-io/primitive/custom/button";
+import { Button } from "@gorth-com/primitive/custom/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/providers/tooltip";
 import {
   AddressBarInput,

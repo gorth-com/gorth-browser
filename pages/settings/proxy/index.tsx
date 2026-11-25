@@ -1,4 +1,4 @@
-import { Network } from "@gorth-io/primitive/cores/lucide";
+import { Network } from "@gorth-com/primitive/cores/lucide";
 import { Wrapper } from "@/layouts/wrapper";
 import { PageHeading } from "@/components/heading";
 import { ProxySettingsCard } from "@/components/element/proxy-settings";

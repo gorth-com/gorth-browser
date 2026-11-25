@@ -5,16 +5,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import Database from "better-sqlite3";
-import {
-  initializeDatabase,
-  closeDatabase,
-  loadBrowserSnapshot,
-  saveBrowserSnapshot,
-  saveTabGroup,
-  deleteTabGroup,
-  loadTabGroups,
-  addRecentlyClosedTab,
-} from "@/services/browser-database";
+import { rawInitializeDatabase, rawCloseDatabase } from "@/services/database"
+import { rawLoadBrowserSnapshot, rawSaveBrowserSnapshot } from "@/models/tab"
+import { rawSaveTabGroup, rawDeleteTabGroup, rawLoadTabGroups } from "@/models/tab-group"
+import { rawAddRecentlyClosedTab } from "@/models/recently-closed"
 import { type PersistedTab } from "@/lib/browser/persistence";
 import {
   updateWebviewBounds,
@@ -31,7 +25,7 @@ test("Tab groups: legacy migration, immediate CRUD, session save, restart and cl
   );
   legacy.close();
   try {
-    initializeDatabase(directory);
+    rawInitializeDatabase(directory);
     const tabs: PersistedTab[] = ["a", "b", "c", "d", "e"].map((id) => ({
       id,
       title: id,
@@ -50,15 +44,15 @@ test("Tab groups: legacy migration, immediate CRUD, session save, restart and cl
       history: [],
       preferences: defaultBrowserPreferences,
     };
-    saveBrowserSnapshot(snapshot);
-    saveTabGroup({ id: "normal", name: "Work", mode: "normal", tabIds: ["a"] });
-    saveTabGroup({
+    rawSaveBrowserSnapshot(snapshot);
+    rawSaveTabGroup({ id: "normal", name: "Work", mode: "normal", tabIds: ["a"] });
+    rawSaveTabGroup({
       id: "split",
       name: "Compare",
       mode: "split",
       tabIds: ["b", "c"],
     });
-    saveTabGroup({
+    rawSaveTabGroup({
       id: "glance",
       name: "Preview",
       mode: "glance",
@@ -71,7 +65,7 @@ test("Tab groups: legacy migration, immediate CRUD, session save, restart and cl
     );
     check.close();
     assert.throws(() =>
-      saveTabGroup({
+      rawSaveTabGroup({
         id: "conflict",
         name: "Duplicate",
         mode: "normal",
@@ -79,25 +73,25 @@ test("Tab groups: legacy migration, immediate CRUD, session save, restart and cl
       }),
     );
     assert.throws(() =>
-      saveTabGroup({
+      rawSaveTabGroup({
         id: "missing",
         name: "Missing",
         mode: "normal",
         tabIds: ["missing"],
       }),
     );
-    saveBrowserSnapshot(snapshot); // A stale session snapshot must not erase named groups.
-    closeDatabase();
-    initializeDatabase(directory);
-    assert.equal(loadBrowserSnapshot().groups.length, 3);
-    saveTabGroup({
+    rawSaveBrowserSnapshot(snapshot); // A stale session snapshot must not erase named groups.
+    rawCloseDatabase();
+    rawInitializeDatabase(directory);
+    assert.equal(rawLoadBrowserSnapshot().groups.length, 3);
+    rawSaveTabGroup({
       id: "normal",
       name: "Renamed",
       mode: "normal",
       tabIds: ["a"],
     });
-    assert.equal(loadTabGroups()[0].name, "Renamed");
-    deleteTabGroup("normal");
+    assert.equal(rawLoadTabGroups()[0].name, "Renamed");
+    rawDeleteTabGroup("normal");
     const deleted = new Database(filename, { readonly: true });
     assert.equal(
       deleted
@@ -108,18 +102,18 @@ test("Tab groups: legacy migration, immediate CRUD, session save, restart and cl
       0,
     );
     deleted.close();
-    addRecentlyClosedTab(tabs[1]);
+    rawAddRecentlyClosedTab(tabs[1]);
     assert.deepEqual(
-      loadTabGroups().map((group) => group.id),
+      rawLoadTabGroups().map((group) => group.id),
       ["glance"],
     );
-    deleteTabGroup("glance");
-    saveBrowserSnapshot(snapshot);
-    closeDatabase();
-    initializeDatabase(directory);
-    assert.deepEqual(loadTabGroups(), []);
+    rawDeleteTabGroup("glance");
+    rawSaveBrowserSnapshot(snapshot);
+    rawCloseDatabase();
+    rawInitializeDatabase(directory);
+    assert.deepEqual(rawLoadTabGroups(), []);
   } finally {
-    closeDatabase();
+    rawCloseDatabase();
     rmSync(directory, { recursive: true, force: true });
   }
 });

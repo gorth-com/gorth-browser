@@ -10,17 +10,10 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import {
-  initializeDatabase,
-  closeDatabase,
-  loadDownloads,
-  saveDownload,
-  deleteDownload,
-  loadDownloadPreferences,
-  saveDownloadPreferences,
-  loadBrowserSnapshot,
-  saveBrowserSnapshot,
-} from "@/services/browser-database";
+import { rawInitializeDatabase, rawCloseDatabase } from "@/services/database"
+import { rawLoadDownloads, rawSaveDownload, rawDeleteDownload } from "@/models/download"
+import { rawLoadDownloadPreferences, rawSaveDownloadPreferences } from "@/models/setting"
+import { rawLoadBrowserSnapshot, rawSaveBrowserSnapshot } from "@/models/tab"
 import {
   getAvailableDownloadPath,
   getSafeDownloadName,
@@ -30,7 +23,7 @@ import type { DownloadRecord } from "@/lib/browser/downloads";
 test("Download history survives session save/restart; unfinished items become interrupted", () => {
   const directory = mkdtempSync(path.join(tmpdir(), "gorth-download-db-"));
   try {
-    initializeDatabase(directory);
+    rawInitializeDatabase(directory);
     const record: DownloadRecord = {
       id: crypto.randomUUID(),
       filename: "file.txt",
@@ -44,39 +37,39 @@ test("Download history survives session save/restart; unfinished items become in
       updatedAt: Date.now(),
     };
     writeFileSync(record.savePath, "keep this file");
-    saveDownload(record);
+    rawSaveDownload(record);
     const completed = {
       ...record,
       id: crypto.randomUUID(),
       state: "completed" as const,
     };
-    saveDownload(completed);
-    saveDownloadPreferences({ directory, askWhereToSave: false });
-    saveBrowserSnapshot(loadBrowserSnapshot());
-    assert.equal(loadDownloads().length, 2);
-    closeDatabase();
-    initializeDatabase(directory);
+    rawSaveDownload(completed);
+    rawSaveDownloadPreferences({ directory, askWhereToSave: false });
+    rawSaveBrowserSnapshot(rawLoadBrowserSnapshot());
+    assert.equal(rawLoadDownloads().length, 2);
+    rawCloseDatabase();
+    rawInitializeDatabase(directory);
     assert.equal(
-      loadDownloads().find((item) => item.id === record.id)?.state,
+      rawLoadDownloads().find((item) => item.id === record.id)?.state,
       "interrupted",
     );
     assert.equal(
-      loadDownloads().find((item) => item.id === completed.id)?.state,
+      rawLoadDownloads().find((item) => item.id === completed.id)?.state,
       "completed",
     );
-    assert.deepEqual(loadDownloadPreferences("fallback"), {
+    assert.deepEqual(rawLoadDownloadPreferences("fallback"), {
       directory,
       askWhereToSave: false,
     });
-    deleteDownload(record.id);
-    deleteDownload(completed.id);
-    assert.equal(loadDownloads().length, 0);
+    rawDeleteDownload(record.id);
+    rawDeleteDownload(completed.id);
+    assert.equal(rawLoadDownloads().length, 0);
     assert.ok(
       existsSync(record.savePath),
       "History removal must not delete the downloaded file",
     );
   } finally {
-    closeDatabase();
+    rawCloseDatabase();
     rmSync(directory, { recursive: true, force: true });
   }
 });
